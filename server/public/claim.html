@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>提交付款凭证 — AGI Engine</title>
+<style>
+  :root { --bg:#0b0e14; --card:#151a24; --line:#232b3a; --txt:#e6e9ef; --mut:#9aa4b8; --acc:#5b8cff; --ok:#3ecf8e; --err:#ff6b6b; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--txt); font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",system-ui,sans-serif; line-height:1.6; }
+  .wrap { max-width:560px; margin:0 auto; padding:32px 20px 64px; }
+  h1 { font-size:24px; margin:0 0 6px; }
+  .sub { color:var(--mut); font-size:14px; margin-bottom:24px; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:14px; padding:22px; margin-bottom:18px; }
+  label { display:block; font-size:13px; color:var(--mut); margin:14px 0 6px; }
+  input, select { width:100%; padding:11px 12px; background:#0e131c; border:1px solid var(--line); border-radius:9px; color:var(--txt); font-size:15px; }
+  input:focus, select:focus { outline:none; border-color:var(--acc); }
+  .plan-row { display:flex; gap:10px; }
+  .plan-btn { flex:1; padding:14px 10px; background:#0e131c; border:1px solid var(--line); border-radius:10px; cursor:pointer; text-align:center; transition:.15s; }
+  .plan-btn.sel { border-color:var(--acc); background:#16223c; }
+  .plan-btn b { display:block; font-size:16px; }
+  .plan-btn span { color:var(--mut); font-size:12px; }
+  button.primary { width:100%; margin-top:20px; padding:13px; background:var(--acc); color:#fff; border:0; border-radius:9px; font-size:16px; font-weight:600; cursor:pointer; }
+  button.primary:disabled { opacity:.5; cursor:not-allowed; }
+  .msg { margin-top:14px; padding:12px 14px; border-radius:9px; font-size:14px; display:none; }
+  .msg.ok { display:block; background:#12362a; color:var(--ok); border:1px solid #1d5c46; }
+  .msg.err { display:block; background:#3a1c1c; color:var(--err); border:1px solid #5c2a2a; }
+  .steps { font-size:13px; color:var(--mut); }
+  .steps li { margin:6px 0; }
+  a { color:var(--acc); }
+  .linkbtn { display:block; text-align:center; padding:12px; border:1px dashed var(--line); border-radius:9px; margin-top:10px; text-decoration:none; font-size:14px; }
+  code { background:#0e131c; padding:2px 6px; border-radius:5px; color:var(--ok); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>提交付款凭证</h1>
+  <p class="sub">已通过 PayPal 付款？在这里登记，我们核对后为你开通 Pro 权限（通常 24 小时内）。</p>
+
+  <div class="card">
+    <ol class="steps">
+      <li>① 选择你购买的套餐</li>
+      <li>② 点击对应的 PayPal 付款链接完成付款</li>
+      <li>③ 在 PayPal 付款成功页或确认邮件中找到 <b>交易号</b>（Transaction ID）</li>
+      <li>④ 填好下方信息提交，等待开通</li>
+    </ol>
+  </div>
+
+  <div class="card">
+    <label>1. 你购买的套餐</label>
+    <div class="plan-row">
+      <div class="plan-btn sel" id="btn-annual" data-plan="annual"><b>$100 / 年</b><span>Annual Pass</span></div>
+      <div class="plan-btn" id="btn-monthly" data-plan="monthly"><b>$15 / 月</b><span>Monthly Pass</span></div>
+    </div>
+    <a class="linkbtn" id="pay-link" href="#" target="_blank" rel="noopener">→ 前往 PayPal 付款（ Annual ）</a>
+
+    <label for="email">2. 你的邮箱（用于接收开通通知）</label>
+    <input id="email" type="email" placeholder="you@example.com" autocomplete="email">
+
+    <label for="txn">3. PayPal 交易号（Transaction ID）</label>
+    <input id="txn" type="text" placeholder="例如 4XA12345AB6789010" autocomplete="off">
+    <div style="font-size:12px;color:var(--mut);margin-top:6px">通常在付款成功页面，或 PayPal 发给你的付款收据邮件里，以数字字母组成。</div>
+
+    <label for="cid">4. 应用内的用户 ID（可选，用于精确开通）</label>
+    <input id="cid" type="text" placeholder="在应用「设置」页可复制，留空则按邮箱开通">
+
+    <button class="primary" id="submit">提交凭证</button>
+    <div class="msg" id="msg"></div>
+  </div>
+
+  <p class="sub" style="font-size:12px">
+    隐私说明：仅收集开通必需的邮箱与交易号，用于核对付款。我们不保存你的 PayPal 密码，也无法看到你的账户余额。
+  </p>
+</div>
+
+<script>
+let plan = 'annual';
+const links = { annual:'', monthly:'' };
+const $ = id => document.getElementById(id);
+
+fetch('/api/payment-links').then(r=>r.json()).then(d=>{
+  links.annual = d.annual; links.monthly = d.monthly;
+  updatePayLink();
+}).catch(()=>{});
+
+function updatePayLink(){
+  const a = $('pay-link');
+  a.href = links[plan] || '#';
+  a.textContent = '→ 前往 PayPal 付款（ ' + (plan==='annual'?'Annual $100/年':'Monthly $15/月') + ' ）';
+}
+
+['annual','monthly'].forEach(p=>{
+  $('btn-'+p).addEventListener('click',()=>{
+    plan = p;
+    $('btn-annual').classList.toggle('sel', p==='annual');
+    $('btn-monthly').classList.toggle('sel', p==='monthly');
+    updatePayLink();
+  });
+});
+
+$('submit').addEventListener('click', async ()=>{
+  const msg = $('msg');
+  msg.className = 'msg';
+  const email = $('email').value.trim();
+  const txn = $('txn').value.trim();
+  const cid = $('cid').value.trim();
+  if(!/^\S+@\S+\.\S+$/.test(email)){ msg.className='msg err'; msg.textContent='请填写有效的邮箱地址'; return; }
+  if(txn.length < 6){ msg.className='msg err'; msg.textContent='请填写 PayPal 交易号（至少 6 位）'; return; }
+  const btn = $('submit'); btn.disabled=true; btn.textContent='提交中…';
+  try {
+    const r = await fetch('/api/claim',{ method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ plan, email, txnId:txn, clientId: cid || ('email:'+email) }) });
+    const d = await r.json();
+    if(r.ok){
+      msg.className='msg ok';
+      msg.innerHTML = '✓ 已收到！认领编号 <code>'+d.claimId+'</code><br>核对付款后我们会开通你的权限。你可以保存此编号查询进度。';
+    } else {
+      msg.className='msg err'; msg.textContent = d.message || d.error || '提交失败，请重试';
+    }
+  } catch(e){ msg.className='msg err'; msg.textContent='网络错误：'+e.message; }
+  btn.disabled=false; btn.textContent='提交凭证';
+});
+</script>
+</body>
+</html>

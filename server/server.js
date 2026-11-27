@@ -26,6 +26,20 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 
+// Minimal zero-dependency .env loader (process env still wins).
+(function loadEnv() {
+  try {
+    const f = path.join(__dirname, '.env');
+    if (!fs.existsSync(f)) return;
+    for (const line of fs.readFileSync(f, 'utf8').split('\n')) {
+      const m = line.match(/^\s*([A-Z0-9_]+)\s*=\s*(.*)\s*$/i);
+      if (m && process.env[m[1]] === undefined) {
+        process.env[m[1]] = m[2].replace(/^['"]|['"]$/g, '').trim();
+      }
+    }
+  } catch (e) { console.warn('[ENV] load failed:', e.message); }
+})();
+
 const PORT = process.env.PORT || 3000;
 const DATA_DIR = path.join(__dirname, 'data');
 const DB_FILE = path.join(DATA_DIR, 'db.json');
@@ -36,7 +50,11 @@ const PAYPAL = {
   secret: process.env.PAYPAL_SECRET || '',
   webhookId: process.env.PAYPAL_WEBHOOK_ID || '',
   mode: (process.env.PAYPAL_MODE || 'sandbox').toLowerCase(),
+  annualLink: process.env.PAYPAL_ANNUAL_LINK || 'https://www.paypal.com/ncp/payment/SBJ2ZGWP7ACLQ',
+  monthlyLink: process.env.PAYPAL_MONTHLY_LINK || 'https://www.paypal.com/ncp/payment/6SAYLMHK2ZHNE',
 };
+// Admin token protects manual claim reconciliation endpoints.
+const ADMIN_TOKEN = process.env.ADMIN_TOKEN || '';
 const PAYPAL_API = PAYPAL.mode === 'live'
   ? 'https://api-m.paypal.com'
   : 'https://api-m.sandbox.paypal.com';
@@ -50,7 +68,14 @@ function emptyDB() {
     subscriptions: {},   // clientId -> { plan, status, expiresAt, payerId, orderId, ts }
     payments: [],        // verified payments only
     webhookLog: [],      // audit trail
+    claims: [],          // manual payment claims: { id, ts, email, plan, txnId, clientId, status, channel, reviewedAt, reviewedBy }
   };
+}
+
+// Backfill claims array for DBs created before this feature existed.
+function ensureSchema(d) {
+  if (!Array.isArray(d.claims)) d.claims = [];
+  return d;
 }
 
 function loadDB() {
@@ -61,7 +86,7 @@ function loadDB() {
       fs.writeFileSync(DB_FILE, JSON.stringify(db, null, 2));
       return db;
     }
-    return JSON.parse(fs.readFileSync(DB_FILE, 'utf8'));
+    return ensureSchema(JSON.parse(fs.readFileSync(DB_FILE, 'utf8')));
   } catch (e) {
     console.error('[DB] load failed, using empty db:', e.message);
     return emptyDB();
@@ -197,6 +222,23 @@ function planFromResource(resource) {
   return { plan: 'unknown', amount: Number(amount) || 0 };
 }
 
+// ---------- Manual claim helpers ----------
+function planAmount(plan) { return plan === 'annual' ? 100 : plan === 'monthly' ? 15 : 0; }
+
+function isAdmin(req) {
+  // Token may be supplied via header (x-admin-token) or query (?token=).
+  if (!ADMIN_TOKEN) return false; // fail closed when no token configured
+  const u = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
+  const supplied = (req.headers['x-admin-token'] || u.searchParams.get('token') || '');
+  const a = Buffer.from(String(supplied));
+  const b = Buffer.from(ADMIN_TOKEN);
+  return a.length === b.length && crypto.timingSafeEqual(a, b);
+}
+
+function normalizeTxn(s) {
+  return String(s || '').trim().toUpperCase().replace(/[\s-]/g, '').slice(0, 80);
+}
+
 // ---------- Report ----------
 function buildReport() {
   const today = new Date().toISOString().slice(0, 10);
@@ -263,6 +305,12 @@ function buildReport() {
       proViewToPayment: t.proViews ? (t.payments / t.proViews * 100).toFixed(1) + '%' : '0%',
     },
     revenue: { total: revenueTotal, today: t.revenue || 0, transactions: db.payments.length },
+    claims: {
+      pending: db.claims.filter(c => c.status === 'PENDING').length,
+      approved: db.claims.filter(c => c.status === 'APPROVED').length,
+      rejected: db.claims.filter(c => c.status === 'REJECTED').length,
+      total: db.claims.length,
+    },
     channels: byChannel,
     weekly: week,
     subscriptions: { active: activeSubs.length, total: subs.length },
@@ -311,6 +359,107 @@ const server = http.createServer(async (req, res) => {
       const id = decodeURIComponent(p.replace('/api/subscribe/', '')).slice(0, 64);
       const sub = db.subscriptions[id] || null;
       return json(res, 200, { clientId: id, subscription: sub });
+    }
+
+    // ---- Manual payment claims (for no-code PayPal links) ----
+    // Customer submits proof of payment after paying via the hosted link.
+    if (p === '/api/claim' && req.method === 'POST') {
+      const b = await readBody(req);
+      const plan = (b.plan === 'annual' || b.plan === 'monthly') ? b.plan : '';
+      const txn = normalizeTxn(b.txnId);
+      const email = String(b.email || '').trim().toLowerCase().slice(0, 120);
+      const clientId = String(b.clientId || 'anon').slice(0, 64);
+      if (!plan) return json(res, 400, { error: 'plan must be annual or monthly' });
+      if (!txn) return json(res, 400, { error: 'txnId (PayPal transaction ID) is required' });
+      if (!/^\S+@\S+\.\S+$/.test(email)) return json(res, 400, { error: 'valid email is required' });
+      // Duplicate protection: same transaction cannot be claimed twice.
+      if (db.claims.some(c => c.txn === txn)) {
+        return json(res, 409, { error: 'DUPLICATE_TXN', message: 'This transaction ID was already submitted.' });
+      }
+      const claim = {
+        id: 'CLM-' + crypto.randomBytes(4).toString('hex').toUpperCase(),
+        ts: new Date().toISOString(),
+        email, plan, txn, clientId,
+        channel: String(b.channel || 'direct').slice(0, 32),
+        status: 'PENDING',
+        reviewedAt: null, reviewedBy: null,
+      };
+      db.claims.push(claim);
+      db.events.push({ ts: claim.ts, type: 'pro_click', clientId, channel: claim.channel, data: { plan, claimId: claim.id } });
+      prune(); saveDB();
+      return json(res, 200, { ok: true, claimId: claim.id, status: 'PENDING', message: 'Submitted. Access activates after verification (usually within 24h).' });
+    }
+
+    // Customer checks claim status by claim id (public, limited fields).
+    if (p.startsWith('/api/claim/status/') && req.method === 'GET') {
+      const id = decodeURIComponent(p.replace('/api/claim/status/', '')).slice(0, 24);
+      const c = db.claims.find(x => x.id === id);
+      if (!c) return json(res, 404, { error: 'claim not found' });
+      return json(res, 200, { claimId: c.id, status: c.status, plan: c.plan, ts: c.ts, reviewedAt: c.reviewedAt });
+    }
+
+    // Admin: list all claims (protected).
+    if (p === '/api/admin/claims' && req.method === 'GET') {
+      if (!isAdmin(req)) return json(res, 401, { error: 'UNAUTHORIZED', message: 'Admin token required.' });
+      const claims = db.claims.slice().sort((a, b2) => b2.ts.localeCompare(a.ts));
+      return json(res, 200, { count: claims.length, claims });
+    }
+
+    // Admin: approve or reject a claim (protected). Approval activates subscription + records real revenue.
+    if ((p === '/api/admin/claim/approve' || p === '/api/admin/claim/reject') && req.method === 'POST') {
+      if (!isAdmin(req)) return json(res, 401, { error: 'UNAUTHORIZED', message: 'Admin token required.' });
+      const b = await readBody(req);
+      const id = String(b.id || '').slice(0, 24);
+      const c = db.claims.find(x => x.id === id);
+      if (!c) return json(res, 404, { error: 'claim not found' });
+      if (c.status !== 'PENDING') return json(res, 409, { error: 'ALREADY_REVIEWED', status: c.status });
+
+      if (p.endsWith('/reject')) {
+        c.status = 'REJECTED';
+        c.reviewedAt = new Date().toISOString();
+        c.reviewedBy = 'admin';
+        c.rejectReason = String(b.reason || '').slice(0, 200);
+        saveDB();
+        return json(res, 200, { ok: true, status: 'REJECTED', claimId: id });
+      }
+
+      // Approve: activate subscription and record revenue.
+      const now = new Date();
+      const expires = new Date(now);
+      if (c.plan === 'annual') expires.setFullYear(expires.getFullYear() + 1);
+      else if (c.plan === 'monthly') expires.setMonth(expires.getMonth() + 1);
+      else expires.setDate(expires.getDate() + 30);
+      const amount = Number(b.amount) || planAmount(c.plan); // allow founder to override actual captured amount
+      c.status = 'APPROVED';
+      c.reviewedAt = now.toISOString();
+      c.reviewedBy = 'admin';
+      c.activatedFor = c.clientId;
+      db.subscriptions[c.clientId] = {
+        plan: c.plan,
+        status: 'ACTIVE',
+        expiresAt: expires.toISOString(),
+        payerId: c.email,
+        orderId: c.txn,
+        ts: now.toISOString(),
+        source: 'manual-reconciliation',
+      };
+      db.payments.push({
+        ts: now.toISOString(),
+        amount,
+        plan: c.plan,
+        orderId: c.txn,
+        clientId: c.clientId,
+        eventType: 'MANUAL_RECONCILIATION',
+        channel: c.channel,
+        email: c.email,
+      });
+      saveDB();
+      return json(res, 200, { ok: true, status: 'APPROVED', claimId: id, activatedFor: c.clientId, expiresAt: expires.toISOString() });
+    }
+
+    // Public config for claim page (payment links, no secrets).
+    if (p === '/api/payment-links') {
+      return json(res, 200, { annual: PAYPAL.annualLink, monthly: PAYPAL.monthlyLink, mode: PAYPAL.mode });
     }
 
     if (p === '/api/paypal/webhook' && req.method === 'POST') {
@@ -370,9 +519,15 @@ const server = http.createServer(async (req, res) => {
       return json(res, 200, { received: true, verified: !!result.verified, reason: result.reason });
     }
 
-    // Static: dashboard
-    if (p === '/' || p === '/dashboard') {
-      const file = path.join(PUBLIC_DIR, 'dashboard.html');
+    // Static pages
+    const staticPages = {
+      '/': 'dashboard.html',
+      '/dashboard': 'dashboard.html',
+      '/claim': 'claim.html',
+      '/reconcile': 'reconcile.html',
+    };
+    if (staticPages[p]) {
+      const file = path.join(PUBLIC_DIR, staticPages[p]);
       if (fs.existsSync(file)) {
         res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
         return res.end(fs.readFileSync(file));
