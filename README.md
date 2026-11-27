@@ -141,3 +141,20 @@ node server.js                    # 默认 http://localhost:3000
 # 打开 http://localhost:3000/dashboard 看真实数据看板
 # 配置 PayPal：先 cp .env.example .env 并填写，然后设置环境变量启动
 ```
+
+---
+
+## 🎁 Side project: GitWrapped
+
+Ever wondered how much code you actually shipped in the last 90 days?
+GitHub knows, but it won't tell you — it just shows a grid of green squares.
+
+I built **GitWrapped**: type a GitHub username, and your browser draws a
+1080×1350 card — commit count, most active repo, active days, longest streak.
+No login, no token, no backend, nothing stored. Runs entirely client-side,
+so it costs $0 no matter how many people use it.
+
+- 🔗 **[Generate your GitWrapped card](https://fnhiq23.github.io/gitwrapped/)**
+- ⭐ [Open source (MIT)](https://github.com/Fnhiq23/gitwrapped)
+
+*(Free cards carry a small watermark with my URL — that's how this spreads.)*
