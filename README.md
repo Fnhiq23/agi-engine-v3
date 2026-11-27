@@ -72,6 +72,10 @@
 
 `launch/` 下有 Show HN、Product Hunt、Twitter/X、中文社区的发布文案，以及发布前清单和红线提醒。
 
+## 支付方案
+
+见 `PAYMENT_UPGRADE.md` —— 当前两个 PayPal 链接的验证结果、能力边界（官方 FAQ：支付链接只支持一次性付款、无 custom_id）、以及升级到真订阅的 API 路径。
+
 ## 完整路线图与判断
 
 见 `FOUNDER_PLAN.md` —— 第一性原理拆解、竞品现实、三块必补项、现实收入预期。
