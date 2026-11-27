@@ -52,6 +52,7 @@ const PAYPAL = {
   mode: (process.env.PAYPAL_MODE || 'sandbox').toLowerCase(),
   annualLink: process.env.PAYPAL_ANNUAL_LINK || 'https://www.paypal.com/ncp/payment/SBJ2ZGWP7ACLQ',
   monthlyLink: process.env.PAYPAL_MONTHLY_LINK || 'https://www.paypal.com/ncp/payment/6SAYLMHK2ZHNE',
+  meLink: process.env.PAYPAL_ME_LINK || 'https://paypal.me/fnhiq23',
   planMonthly: process.env.PAYPAL_PLAN_MONTHLY || '',
   planAnnual: process.env.PAYPAL_PLAN_ANNUAL || '',
 };
@@ -462,7 +463,7 @@ const server = http.createServer(async (req, res) => {
     // Public config for claim page (payment links + subscription plan ids, no secrets).
     if (p === '/api/payment-links') {
       return json(res, 200, {
-        annual: PAYPAL.annualLink, monthly: PAYPAL.monthlyLink, mode: PAYPAL.mode,
+        annual: PAYPAL.annualLink, monthly: PAYPAL.monthlyLink, me: PAYPAL.meLink, mode: PAYPAL.mode,
         planAnnual: PAYPAL.planAnnual, planMonthly: PAYPAL.planMonthly,
         subscriptionsEnabled: !!(PAYPAL.planAnnual && PAYPAL.planMonthly && PAYPAL.clientId),
       });
