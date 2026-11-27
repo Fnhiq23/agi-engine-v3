@@ -54,6 +54,12 @@
     </div>
     <a class="linkbtn" id="pay-link" href="#" target="_blank" rel="noopener">→ 前往 PayPal 付款（ Annual ）</a>
 
+    <div style="margin-top:10px;padding:10px 12px;border:1px dashed var(--mut);border-radius:8px;font-size:12px;color:var(--mut);line-height:1.7">
+      <b style="color:var(--txt)">也可用 PayPal.Me 直接转账：</b>
+      <a id="payme-link" href="https://paypal.me/fnhiq23" target="_blank" rel="noopener" style="color:#0070ba;font-weight:700">paypal.me/fnhiq23 ↗</a>
+      <br>⚠️ 用此方式时<b style="color:#c0392b">请务必手动输入准确金额</b>（年卡 $100 / 月卡 $15），并在下方交易号处如实填写，否则我们无法为你开通。
+    </div>
+
     <label for="email">2. 你的邮箱（用于接收开通通知）</label>
     <input id="email" type="email" placeholder="you@example.com" autocomplete="email">
 
@@ -75,11 +81,12 @@
 
 <script>
 let plan = 'annual';
-const links = { annual:'', monthly:'' };
+const links = { annual:'', monthly:'', me:'' };
 const $ = id => document.getElementById(id);
 
 fetch('/api/payment-links').then(r=>r.json()).then(d=>{
-  links.annual = d.annual; links.monthly = d.monthly;
+  links.annual = d.annual; links.monthly = d.monthly; links.me = d.me;
+  if (links.me) $('payme-link').href = links.me;
   updatePayLink();
 }).catch(()=>{});
 
