@@ -1060,7 +1060,9 @@ textarea.input-field { font-family: inherit; }
 // Same-origin by default. If you deploy the frontend to GitHub Pages and the
 // backend separately (e.g. Render/Railway), set this to the backend URL, e.g.:
 //   const BACKEND_BASE = 'https://agi-engine-backend.onrender.com';
-const BACKEND_BASE = (window.AGI_BACKEND_BASE || '').replace(/\/$/, '');
+// FIX(DEL-017 感知管道): 生产默认注入公网后端；历史遗留为空会导致 App 全链路埋点/订阅/认领静默失效（"感知失灵"）。
+const DEFAULT_BACKEND = 'https://acb7adbd80f066c9d.app.workbuddy.host';
+const BACKEND_BASE = ((window.AGI_BACKEND_BASE || DEFAULT_BACKEND) || '').replace(/\/$/, '');
 
 // Wire the "Already paid?" link to the backend claim page.
 function wireClaimLink() {
@@ -1073,6 +1075,13 @@ document.addEventListener('DOMContentLoaded', wireClaimLink);
 // If the backend has live subscriptions configured, upgrade the paywall buttons
 // to create real auto-renewing subscriptions. Otherwise keep one-time links.
 function initSubscriptionButtons() {
+  // FIX(DEL-017): 任何支付按钮点击都上报 pro_click（覆盖静态链接与动态订阅两条路径）
+  [['paypal-annual','annual'], ['paypal-monthly','monthly']].forEach(([id, plan]) => {
+    const el = document.getElementById(id);
+    if (el) el.addEventListener('click', () => {
+      if (typeof Analytics !== 'undefined') Analytics.track('pro_click', { plan });
+    });
+  });
   if (!BACKEND_BASE) return; // no backend → keep static one-time links
   fetch(BACKEND_BASE + '/api/payment-links').then(r => r.json()).then(cfg => {
     if (!cfg.subscriptionsEnabled) return; // plans not configured → keep one-time links
@@ -1431,7 +1440,11 @@ function switchTab(tab) {
   // Refresh tab content
   if (tab === 'memory') renderMemories();
   if (tab === 'earn') renderEarn();
-  if (tab === 'pro') updatePaywall();
+  if (tab === 'pro') {
+    // FIX(DEL-017): 补发 pro_view 漏斗事件（此前付费墙浏览从未上报，导致 proViewToPayment 分母恒 0）
+    if (typeof Analytics !== 'undefined' && !GAME.isPro) Analytics.track('pro_view', {});
+    updatePaywall();
+  }
 }
 
 // ═══════════════════════════════════════════════════════════
@@ -1549,6 +1562,8 @@ function onboardNext() {
     addXP(XP.subscribe);
     GAME.isPro = false; // start free
     saveGame();
+    // FIX(DEL-017): 补发 onboard_complete 漏斗事件（此前只有字段定义、从未上报）
+    if (typeof Analytics !== 'undefined') Analytics.track('onboard_complete', {});
     showApp();
   }
 }
@@ -2310,6 +2325,16 @@ const Analytics = {
 
     // Persist
     this.save();
+
+    // FIX(DEL-017 感知管道): 桥接所有 App 事件到后端。
+    // 历史缺陷：Analytics.track 只写 localStorage，服务端 /api/report 的 app 漏斗恒为 0（"感知失灵"）。
+    // 这里统一收口上报；与全局 track() 的 referral_click 共享同一后端，靠事件名区分，不会重复计数（后端按事件分别统计）。
+    try {
+      if (typeof track === 'function') {
+        const ch = data && data.channel ? data.channel : undefined;
+        track(event, ch);
+      }
+    } catch (e) {}
 
     // Dispatch custom event for UI updates
     window.dispatchEvent(new CustomEvent('agi-analytics', { detail: { event, data } }));
