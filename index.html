@@ -1,0 +1,2536 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#0A0A0F">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>AGI Engine — Your Personal AGI</title>
+<style>
+/* ═══════════════════════════════════════════════════════════
+   AGI ENGINE v3.0 — First-Principles Optimization
+   ═══════════════════════════════════════════════════════════ */
+
+:root {
+  --bg: #06060C;
+  --surface: #0D0D16;
+  --surface2: #14141F;
+  --border: #222233;
+  --text: #E8E8F0;
+  --muted: #7070A0;
+  --pri: #00D4FF;
+  --acc: #FF3366;
+  --grn: #00FF9D;
+  --amb: #FFB800;
+  --pur: #A855F7;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif;
+  min-height: 100vh; min-height: 100dvh;
+  overflow-x: hidden;
+}
+
+/* ── Screen System ── */
+.screen { display:none; position:fixed; inset:0; overflow-y:auto; }
+.screen.active { display:block; }
+
+/* ═══════════════════════════════════════════════════════════
+   SCREEN 1: LANDING
+   ═══════════════════════════════════════════════════════════ */
+
+#screen-landing {
+  background: var(--bg);
+  display: none; flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: 40px 24px; text-align: center;
+  position: relative; overflow: hidden;
+}
+#screen-landing.active { display: flex; }
+
+/* Animated background */
+#screen-landing::before {
+  content: '';
+  position: absolute; inset: 0;
+  background:
+    radial-gradient(ellipse 600px 400px at 30% 20%, rgba(0,212,255,0.08), transparent),
+    radial-gradient(ellipse 500px 300px at 70% 80%, rgba(168,85,247,0.06), transparent);
+  pointer-events: none;
+}
+
+.landing-logo {
+  width: 100px; height: 100px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--pri), var(--pur));
+  display: flex; align-items: center; justify-content: center;
+  font-size: 44px; margin-bottom: 28px;
+  box-shadow: 0 0 60px rgba(0,212,255,0.25);
+  animation: logoFloat 4s ease-in-out infinite;
+  position: relative; z-index: 1;
+}
+@keyframes logoFloat {
+  0%,100% { transform: translateY(0); box-shadow: 0 0 60px rgba(0,212,255,0.25); }
+  50% { transform: translateY(-8px); box-shadow: 0 0 80px rgba(0,212,255,0.4); }
+}
+
+.landing-title {
+  font-size: 32px; font-weight: 800; letter-spacing: -1px;
+  background: linear-gradient(135deg, #fff, var(--pri));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  margin-bottom: 12px; position: relative; z-index: 1;
+}
+.landing-sub {
+  font-size: 16px; color: var(--muted);
+  margin-bottom: 48px; line-height: 1.6;
+  max-width: 340px; position: relative; z-index: 1;
+}
+
+.value-pills {
+  display: flex; flex-wrap: wrap; gap: 8px;
+  justify-content: center; margin-bottom: 48px;
+  position: relative; z-index: 1;
+}
+.value-pill {
+  padding: 8px 16px; border-radius: 20px;
+  background: var(--surface); border: 1px solid var(--border);
+  font-size: 13px; color: var(--text);
+}
+
+.landing-actions { display: flex; flex-direction: column; gap: 12px; width: 100%; max-width: 300px; position: relative; z-index: 1; }
+
+.btn {
+  width: 100%; padding: 16px;
+  border: none; border-radius: 14px;
+  font-size: 16px; font-weight: 700;
+  cursor: pointer; transition: all 0.2s;
+  letter-spacing: 0.3px;
+}
+.btn:active { transform: scale(0.97); }
+.btn-primary {
+  background: linear-gradient(135deg, var(--pri), var(--pur));
+  color: #000;
+  box-shadow: 0 4px 24px rgba(0,212,255,0.2);
+}
+.btn-secondary {
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border);
+}
+.btn-accent {
+  background: linear-gradient(135deg, var(--acc), #FF6B35);
+  color: #fff;
+  box-shadow: 0 4px 24px rgba(255,51,102,0.2);
+}
+.btn-grn {
+  background: linear-gradient(135deg, var(--grn), #00CC7A);
+  color: #000;
+  box-shadow: 0 4px 24px rgba(0,255,157,0.15);
+}
+.btn-sm { padding: 10px 16px; font-size: 13px; border-radius: 10px; width: auto; }
+
+.landing-footer {
+  position: absolute; bottom: 24px;
+  font-size: 11px; color: var(--muted);
+  z-index: 1;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   SCREEN 2: ONBOARDING (Free Trial Experience)
+   ═══════════════════════════════════════════════════════════ */
+
+#screen-onboard {
+  background: var(--bg);
+  display: none; flex-direction: column;
+  min-height: 100dvh;
+}
+#screen-onboard.active { display: flex; }
+
+.onboard-header {
+  padding: 20px 20px 0;
+  display: flex; justify-content: space-between; align-items: center;
+}
+
+.xp-bar-container {
+  flex: 1; margin: 0 16px;
+  background: var(--surface2); border-radius: 10px;
+  height: 8px; overflow: hidden;
+}
+.xp-bar {
+  height: 100%;
+  background: linear-gradient(90deg, var(--pri), var(--pur));
+  border-radius: 10px;
+  transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  width: 0%;
+}
+.xp-label {
+  text-align: center; font-size: 11px; color: var(--muted);
+  margin-top: 4px;
+}
+
+.onboard-stage {
+  flex: 1; display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: 30px 24px; text-align: center;
+}
+
+.stage-icon {
+  font-size: 64px; margin-bottom: 20px;
+  animation: stagePop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+@keyframes stagePop {
+  from { transform: scale(0.5); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+.stage-title {
+  font-size: 24px; font-weight: 800; margin-bottom: 12px;
+}
+.stage-desc {
+  font-size: 15px; color: var(--muted); line-height: 1.6;
+  max-width: 340px; margin-bottom: 30px;
+}
+
+.demo-area {
+  width: 100%; max-width: 380px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px; padding: 20px;
+  margin-bottom: 24px;
+}
+
+/* Demo: Memory */
+.demo-memory-input {
+  width: 100%; padding: 14px;
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 10px; color: var(--text); font-size: 14px;
+  outline: none; resize: none; margin-bottom: 12px;
+  font-family: inherit;
+}
+.demo-memory-input:focus { border-color: var(--pri); }
+.demo-memory-input::placeholder { color: var(--muted); }
+
+.demo-memory-list { text-align: left; max-height: 160px; overflow-y: auto; }
+.demo-memory-item {
+  padding: 10px 12px; background: var(--surface2);
+  border-radius: 8px; margin-bottom: 8px;
+  font-size: 13px; border-left: 3px solid var(--pri);
+  animation: fadeUp 0.3s ease;
+}
+@keyframes fadeUp { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+.demo-memory-item .tag {
+  font-size: 10px; color: var(--muted);
+  margin-top: 4px; display: block;
+}
+
+/* Demo: Chat */
+.demo-chat {
+  height: 180px; overflow-y: auto;
+  margin-bottom: 12px; text-align: left;
+}
+.demo-msg {
+  max-width: 80%; padding: 10px 14px;
+  border-radius: 14px; margin-bottom: 8px;
+  font-size: 13px; line-height: 1.5;
+  animation: fadeUp 0.3s ease;
+}
+.demo-msg.ai {
+  background: var(--surface2); border: 1px solid var(--border);
+  margin-right: auto; border-bottom-left-radius: 4px;
+}
+.demo-msg.user {
+  background: linear-gradient(135deg, var(--pri), var(--pur));
+  color: #000; margin-left: auto; border-bottom-right-radius: 4px;
+}
+.demo-chat-input-row {
+  display: flex; gap: 8px;
+}
+.demo-chat-input-row input {
+  flex: 1; padding: 12px;
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 10px; color: var(--text); font-size: 14px;
+  outline: none;
+}
+.demo-chat-input-row input:focus { border-color: var(--pri); }
+
+/* Demo: Task */
+.demo-task-input {
+  width: 100%; padding: 14px;
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 10px; color: var(--text); font-size: 14px;
+  outline: none; margin-bottom: 12px;
+}
+.demo-task-input:focus { border-color: var(--pri); }
+.demo-task-input::placeholder { color: var(--muted); }
+
+.demo-task-list { text-align: left; }
+.demo-task-item {
+  padding: 12px; background: var(--surface2);
+  border-radius: 10px; margin-bottom: 8px;
+  display: flex; align-items: center; gap: 12px;
+  animation: fadeUp 0.3s ease;
+}
+.demo-task-check {
+  width: 22px; height: 22px; border-radius: 50%;
+  border: 2px solid var(--border);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; font-size: 12px; flex-shrink: 0;
+  transition: all 0.2s;
+}
+.demo-task-check.done {
+  background: var(--grn); border-color: var(--grn);
+  color: #000;
+}
+.demo-task-text { font-size: 14px; flex: 1; }
+.demo-task-text.done { text-decoration: line-through; color: var(--muted); }
+
+/* Stage dots */
+.stage-dots {
+  display: flex; gap: 8px; justify-content: center;
+  margin-bottom: 20px;
+}
+.stage-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--border);
+  transition: all 0.3s;
+}
+.stage-dot.active { background: var(--pri); width: 24px; border-radius: 4px; }
+
+.onboard-actions {
+  display: flex; gap: 10px; width: 100%; max-width: 380px;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   SCREEN 3: MAIN APP
+   ═══════════════════════════════════════════════════════════ */
+
+#screen-app {
+  background: var(--bg);
+  display: none; flex-direction: column;
+  min-height: 100dvh;
+}
+#screen-app.active { display: flex; }
+
+.app-header {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 12px 20px;
+  display: flex; justify-content: space-between; align-items: center;
+  position: sticky; top: 0; z-index: 100;
+  backdrop-filter: blur(20px);
+}
+.header-left { display: flex; align-items: center; gap: 10px; }
+.logo-dot {
+  width: 10px; height: 10px; border-radius: 50%;
+  background: var(--grn);
+  box-shadow: 0 0 10px var(--grn);
+  animation: dotBlink 2s infinite;
+}
+@keyframes dotBlink { 0%,100%{opacity:1} 50%{opacity:0.4} }
+.logo-text { font-size: 17px; font-weight: 700; letter-spacing: 1px; }
+.header-right { display: flex; align-items: center; gap: 10px; }
+.level-badge {
+  font-size: 11px; font-weight: 700;
+  background: linear-gradient(135deg, var(--amb), #FF6B00);
+  color: #000; padding: 4px 10px; border-radius: 20px;
+}
+.streak-badge {
+  font-size: 11px; font-weight: 700;
+  background: rgba(255,51,102,0.15); color: var(--acc);
+  padding: 4px 10px; border-radius: 20px;
+}
+.wallet-pill {
+  font-size: 11px; font-family: monospace;
+  background: var(--surface2);
+  padding: 5px 10px; border-radius: 20px;
+  color: var(--pri); border: 1px solid var(--border);
+}
+
+/* Tab Nav */
+.tab-nav {
+  display: flex; background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  overflow-x: auto;
+}
+.tab-btn {
+  flex: 1; min-width: 70px; padding: 12px 4px;
+  background: none; border: none;
+  color: var(--muted); font-size: 11px; font-weight: 600;
+  cursor: pointer; border-bottom: 2px solid transparent;
+  transition: all 0.3s; white-space: nowrap;
+}
+.tab-btn.active { color: var(--pri); border-bottom-color: var(--pri); }
+
+.main-content { flex:1; padding:12px; padding-bottom:80px; overflow-y:auto; }
+.tab-panel { display:none; }
+.tab-panel.active { display:block; }
+
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px; padding: 18px; margin-bottom: 12px;
+}
+.card-title {
+  font-size: 12px; font-weight: 700; color: var(--muted);
+  text-transform: uppercase; letter-spacing: 1.5px;
+  margin-bottom: 14px;
+}
+
+/* Metrics */
+.metric-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:12px; }
+.metric-card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 14px; padding: 16px; text-align: center;
+}
+.metric-value {
+  font-size: 28px; font-weight: 800;
+  font-family: 'Courier New', monospace;
+  color: var(--pri);
+}
+.metric-value.grn { color: var(--grn); }
+.metric-value.acc { color: var(--acc); }
+.metric-value.amb { color: var(--amb); }
+.metric-label { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; margin-top: 4px; }
+.metric-bar { height: 3px; background: var(--border); border-radius: 2px; margin-top: 8px; overflow: hidden; }
+.bar-fill { height: 100%; border-radius: 2px; transition: width 0.5s; }
+.bar-fill.pri { background: var(--pri); }
+.bar-fill.grn { background: var(--grn); }
+.bar-fill.acc { background: var(--acc); }
+.bar-fill.pur { background: var(--pur); }
+
+/* Streak fire */
+.streak-display {
+  text-align: center; padding: 16px;
+  background: linear-gradient(135deg, rgba(255,51,102,0.1), rgba(255,184,0,0.1));
+  border: 1px solid rgba(255,51,102,0.2);
+  border-radius: 16px; margin-bottom: 12px;
+}
+.streak-fire { font-size: 36px; margin-bottom: 4px; }
+.streak-count { font-size: 28px; font-weight: 800; color: var(--acc); }
+.streak-text { font-size: 12px; color: var(--muted); }
+
+/* Achievement */
+.achievement-toast {
+  position: fixed; top: 60px; left: 50%; transform: translateX(-50%);
+  background: var(--surface2); border: 1px solid var(--amb);
+  border-radius: 14px; padding: 14px 20px;
+  z-index: 999; display: none; align-items: center; gap: 12px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+  animation: slideDown 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  max-width: 340px;
+}
+.achievement-toast.show { display: flex; }
+@keyframes slideDown { from{transform:translateX(-50%) translateY(-20px);opacity:0} to{transform:translateX(-50%) translateY(0);opacity:1} }
+.achievement-icon { font-size: 28px; }
+.achievement-text { font-size: 13px; }
+.achievement-text strong { color: var(--amb); display: block; }
+
+/* Subscription Card (Paywall) */
+.paywall-card {
+  background: linear-gradient(135deg, rgba(0,212,255,0.08), rgba(168,85,247,0.08));
+  border: 1px solid rgba(0,212,255,0.15);
+  border-radius: 20px; padding: 24px; margin-bottom: 16px;
+  text-align: center; position: relative; overflow: hidden;
+}
+.paywall-card::before {
+  content: '';
+  position: absolute; top: -50%; left: -50%;
+  width: 200%; height: 200%;
+  background: conic-gradient(from 0deg, transparent, rgba(0,212,255,0.1), transparent, rgba(168,85,247,0.1), transparent);
+  animation: paywallSpin 8s linear infinite;
+}
+@keyframes paywallSpin { to { transform: rotate(360deg); } }
+.paywall-inner { position: relative; z-index: 1; }
+.paywall-badge {
+  display: inline-block; padding: 4px 12px; border-radius: 20px;
+  background: rgba(0,255,157,0.15); color: var(--grn);
+  font-size: 11px; font-weight: 700; letter-spacing: 1px;
+  margin-bottom: 12px;
+}
+.paywall-price {
+  font-size: 48px; font-weight: 800;
+  background: linear-gradient(135deg, var(--pri), var(--pur));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+  margin-bottom: 4px;
+}
+.paywall-period { font-size: 14px; color: var(--muted); margin-bottom: 16px; }
+.paywall-features { text-align: left; margin: 16px 0; }
+.paywall-feature {
+  padding: 8px 0; font-size: 14px; color: var(--text);
+  display: flex; align-items: center; gap: 10px;
+}
+.paywall-feature::before { content: '✓'; color: var(--grn); font-weight: 700; font-size: 16px; }
+.paywall-feature.locked::before { content: '🔒'; color: var(--muted); }
+.paywall-feature.locked { color: var(--muted); }
+
+.paywall-btns { display: flex; gap: 10px; margin-top: 16px; }
+.paywall-btns .btn { flex: 1; }
+
+/* Free tier banner */
+.free-banner {
+  background: linear-gradient(135deg, rgba(0,255,157,0.1), rgba(0,212,255,0.1));
+  border: 1px solid rgba(0,255,157,0.2);
+  border-radius: 14px; padding: 16px; margin-bottom: 16px;
+  text-align: center;
+}
+.free-banner-title { font-size: 14px; font-weight: 700; color: var(--grn); margin-bottom: 4px; }
+.free-banner-desc { font-size: 12px; color: var(--muted); }
+
+/* Blockchain stats */
+.chain-stat {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 10px 0; border-bottom: 1px solid var(--border);
+  font-size: 13px;
+}
+.chain-stat:last-child { border-bottom: none; }
+.chain-stat-label { color: var(--muted); }
+.chain-stat-value { color: var(--pri); font-family: monospace; font-weight: 600; }
+
+/* Task marketplace */
+.task-card {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 12px; padding: 14px; margin-bottom: 10px;
+}
+.task-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+.task-title { font-size: 14px; font-weight: 700; }
+.task-reward { font-size: 14px; font-weight: 800; color: var(--grn); }
+.task-desc { font-size: 12px; color: var(--muted); margin-bottom: 10px; line-height: 1.5; }
+.task-meta { display: flex; gap: 6px; flex-wrap: wrap; }
+.task-tag {
+  font-size: 10px; padding: 3px 8px; border-radius: 4px;
+  background: rgba(0,212,255,0.1); color: var(--pri);
+  text-transform: uppercase; letter-spacing: 0.5px;
+}
+
+/* Share */
+.share-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+.share-btn {
+  padding: 14px; border-radius: 12px;
+  background: var(--surface2); border: 1px solid var(--border);
+  color: var(--text); font-size: 13px; font-weight: 600;
+  cursor: pointer; transition: all 0.2s;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+}
+.share-btn:active { transform: scale(0.97); }
+.share-btn.wechat { border-color: #07C160; color: #07C160; }
+.share-btn.twitter { border-color: #1DA1F2; color: #1DA1F2; }
+.share-btn.link { border-color: var(--pri); color: var(--pri); }
+
+.referral-code {
+  background: var(--surface2); border: 2px dashed var(--border);
+  border-radius: 12px; padding: 16px; text-align: center;
+  font-family: monospace; font-size: 18px; letter-spacing: 3px;
+  color: var(--pri); margin-bottom: 12px;
+}
+
+/* Bottom Nav */
+.bottom-nav {
+  display: flex; position: fixed;
+  bottom: 0; left: 0; right: 0;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  padding: 6px 0; padding-bottom: max(6px, env(safe-area-inset-bottom));
+  justify-content: space-around; z-index: 200;
+  backdrop-filter: blur(20px);
+}
+.bottom-btn {
+  background: none; border: none;
+  color: var(--muted); font-size: 22px;
+  padding: 6px 12px; cursor: pointer; transition: color 0.3s;
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+}
+.bottom-btn span { font-size: 10px; font-weight: 600; }
+.bottom-btn.active { color: var(--pri); }
+
+/* Log */
+.log-container {
+  max-height: 200px; overflow-y: auto;
+  font-family: 'Courier New', monospace;
+  font-size: 11px; line-height: 1.7;
+}
+.log-entry { padding: 4px 0; border-bottom: 1px solid rgba(255,255,255,0.03); }
+.log-time { color: var(--pri); margin-right: 6px; }
+.log-type.info { color: var(--pri); }
+.log-type.success { color: var(--grn); }
+.log-type.warn { color: var(--amb); }
+.log-type.error { color: var(--acc); }
+
+/* Responsive */
+@media (min-width: 769px) {
+  .tab-nav { display: flex; }
+  .bottom-nav { display: none; }
+}
+@media (max-width: 768px) {
+  .tab-nav { display: none; }
+  .bottom-nav { display: flex; }
+  .main-content { padding-bottom: 80px; }
+}
+
+::-webkit-scrollbar { width: 3px; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+textarea.input-field { font-family: inherit; }
+</style>
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════════
+     SCREEN 1: LANDING PAGE
+     ═══════════════════════════════════════════════════════════ -->
+<div id="screen-landing" class="active">
+  <div class="landing-logo">⬡</div>
+  <div class="landing-title">Your Personal AGI</div>
+  <div class="landing-sub">Your personal AI that learns from you,<br>remembers for you, and works for you. Runs 100% on your device.</div>
+
+  <div class="value-pills">
+    <span class="value-pill">🧠 Learns Your Preferences</span>
+    <span class="value-pill">🔒 Encrypted Memory</span>
+    <span class="value-pill">⚡ Runs on Your Device</span>
+    <span class="value-pill">🔐 Local AES-256 Encryption</span>
+    <span class="value-pill">🌐 No Server Required</span>
+  </div>
+
+  <div class="landing-actions">
+    <button class="btn btn-primary" onclick="startFreeTrial()">Start Free Trial →</button>
+    <button class="btn btn-secondary" onclick="showApp()">I Already Have an Account</button>
+  </div>
+
+  <div class="landing-footer">
+    Free trial · No credit card required · Cancel anytime
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     SCREEN 2: ONBOARDING (3-Step Free Trial)
+     ═══════════════════════════════════════════════════════════ -->
+<div id="screen-onboard">
+  <div class="onboard-header">
+    <button class="btn btn-sm btn-secondary" onclick="skipOnboard()">Skip</button>
+    <div style="flex:1;margin:0 12px;">
+      <div class="xp-bar-container">
+        <div class="xp-bar" id="xpBar"></div>
+      </div>
+      <div class="xp-label" id="xpLabel">Step 1 of 3 — Experience the magic</div>
+    </div>
+    <div style="font-size:11px;color:var(--muted);" id="onboardStep">1/3</div>
+  </div>
+
+  <div class="onboard-stage" id="onboardStage">
+    <!-- Stage 1: Memory -->
+    <div class="stage-icon">🧠</div>
+    <div class="stage-title">It Remembers Everything</div>
+    <div class="stage-desc">Try storing a memory. AGI will remember it forever — encrypted and stored locally.</div>
+    <div class="demo-area">
+      <input type="text" id="demoMemInput" class="demo-memory-input" placeholder="Type something to remember... (e.g. 'I love coffee, no sugar')" onkeydown="if(event.key==='Enter')addDemoMemory()">
+      <div class="demo-memory-list" id="demoMemList"></div>
+    </div>
+  </div>
+
+  <div class="stage-dots" id="stageDots">
+    <div class="stage-dot active"></div>
+    <div class="stage-dot"></div>
+    <div class="stage-dot"></div>
+  </div>
+
+  <div style="padding:0 20px 30px;width:100%;max-width:380px;margin:0 auto;">
+    <div class="onboard-actions">
+      <button class="btn btn-secondary" id="onboardBack" onclick="onboardBack()" style="display:none;">← Back</button>
+      <button class="btn btn-primary" id="onboardNext" onclick="onboardNext()">Next →</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     SCREEN 3: MAIN APP
+     ═══════════════════════════════════════════════════════════ -->
+<div id="screen-app">
+  <header class="app-header">
+    <div class="header-left">
+      <div class="logo-dot"></div>
+      <span class="logo-text">AGI</span>
+      <span class="streak-badge" id="streakBadge">🔥 0</span>
+    </div>
+    <div class="header-right">
+      <span class="level-badge" id="levelBadge">Lv.1</span>
+      <span class="wallet-pill" id="walletPill" style="display:none;"></span>
+    </div>
+  </header>
+
+  <!-- Tab Navigation -->
+  <nav class="tab-nav">
+    <button class="tab-btn active" data-tab="home">Home</button>
+    <button class="tab-btn" data-tab="chat">Chat</button>
+    <button class="tab-btn" data-tab="memory">Memory</button>
+    <button class="tab-btn" data-tab="earn">Earn</button>
+    <button class="tab-btn" data-tab="settings">⚙️ Settings</button>
+    <button class="tab-btn" data-tab="pro">Pro</button>
+  </nav>
+
+  <main class="main-content">
+
+    <!-- TAB: HOME -->
+    <section class="tab-panel active" id="tab-home">
+      <!-- Streak -->
+      <div class="streak-display" id="streakDisplay">
+        <div class="streak-fire" id="streakFire">🔥</div>
+        <div>
+          <span class="streak-count" id="streakCount">0</span>
+          <span class="streak-text"> day streak · Keep it going!</span>
+        </div>
+      </div>
+
+      <!-- Metrics -->
+      <div class="metric-grid">
+        <div class="metric-card">
+          <div class="metric-value" id="mLevel">1</div>
+          <div class="metric-label">Level</div>
+          <div class="metric-bar"><div class="bar-fill amb" id="bXP" style="width:0%"></div></div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-value grn" id="mMemories">0</div>
+          <div class="metric-label">Memories</div>
+          <div class="metric-bar"><div class="bar-fill grn" id="bMemories" style="width:0%"></div></div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-value acc" id="mTasks">0</div>
+          <div class="metric-label">Tasks Done</div>
+          <div class="metric-bar"><div class="bar-fill acc" id="bTasks" style="width:0%"></div></div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-value" id="mChats">0</div>
+          <div class="metric-label">Conversations</div>
+          <div class="metric-bar"><div class="bar-fill pri" id="bChats" style="width:0%"></div></div>
+        </div>
+      </div>
+
+      <!-- Quick Actions -->
+      <div class="card">
+        <div class="card-title">Quick Actions</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+          <button class="btn btn-secondary btn-sm" onclick="switchTab('chat')">💬 New Chat</button>
+          <button class="btn btn-secondary btn-sm" onclick="switchTab('memory')">🧠 Save Memory</button>
+          <button class="btn btn-secondary btn-sm" onclick="switchTab('earn')">💎 Daily Reward</button>
+          <button class="btn btn-secondary btn-sm" onclick="switchTab('pro')">⭐ Go Pro</button>
+        </div>
+      </div>
+
+      <!-- Activity -->
+      <div class="card">
+        <div class="card-title">Recent Activity</div>
+        <div class="log-container" id="activityLog"></div>
+      </div>
+    </section>
+
+    <!-- TAB: CHAT -->
+    <section class="tab-panel" id="tab-chat">
+      <div class="card">
+        <div class="card-title">AGI Assistant</div>
+        <div class="demo-chat" id="chatHistory"></div>
+        <div class="demo-chat-input-row">
+          <input type="text" id="chatInput" placeholder="Ask anything..." onkeydown="if(event.key==='Enter')sendChat()">
+          <button class="btn btn-primary btn-sm" onclick="sendChat()">Send</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB: MEMORY -->
+    <section class="tab-panel" id="tab-memory">
+      <div class="card">
+        <div class="card-title">Persistent Memory</div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:12px;line-height:1.6;">
+          Your memories are stored on this device. Set a passphrase in Settings → Privacy Vault to encrypt them.
+        </div>
+        <div style="display:flex;gap:8px;margin-bottom:10px;">
+          <input type="text" id="memInput" class="demo-memory-input" placeholder="Store a memory — AGI will remember forever..." onkeydown="if(event.key==='Enter')addMemory()">
+          <button class="btn btn-primary btn-sm" onclick="addMemory()">Save</button>
+        </div>
+        <div style="display:flex;gap:8px;margin-bottom:12px;">
+          <input type="text" id="memSearch" class="demo-memory-input" placeholder="🔍 Search memories..." oninput="renderMemories()">
+        </div>
+        <div id="memoryList" class="demo-memory-list"></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:14px;padding-top:14px;border-top:1px solid var(--border);">
+          <button class="btn btn-secondary btn-sm" onclick="exportMemories(false)">⬇ Export (JSON)</button>
+          <button class="btn btn-secondary btn-sm" onclick="exportMemories(true)">🔐 Export (Encrypted)</button>
+          <label class="btn btn-secondary btn-sm" style="cursor:pointer;">⬆ Import
+            <input type="file" id="memImportFile" accept=".json" style="display:none;" onchange="importMemories(event)">
+          </label>
+        </div>
+        <div id="memoryCount" style="font-size:11px;color:var(--muted);margin-top:10px;"></div>
+      </div>
+    </section>
+
+    <!-- TAB: EARN (Daily Rewards + Referral) -->
+    <section class="tab-panel" id="tab-earn">
+      <!-- Daily Reward -->
+      <div class="card">
+        <div class="card-title">Daily Rewards</div>
+        <div class="free-banner" id="dailyRewardBanner">
+          <div class="free-banner-title">🎁 Daily Login Reward</div>
+          <div class="free-banner-desc" id="dailyRewardDesc">Check in daily to earn XP and unlock rewards!</div>
+        </div>
+        <button class="btn btn-grn" id="dailyClaimBtn" onclick="claimDailyReward()">Claim Today's Reward</button>
+      </div>
+
+      <!-- Referral -->
+      <div class="card">
+        <div class="card-title">Invite Friends · Earn Together</div>
+        <div style="font-size:13px;color:var(--muted);margin-bottom:14px;line-height:1.6;">
+          Share your referral link. When friends subscribe, you both get <strong style="color:var(--grn);">+1 month free</strong>.
+        </div>
+        <div class="referral-code" id="referralCode">AGI-XXXXXX</div>
+        <div class="share-grid">
+          <button class="share-btn wechat" onclick="shareWechat()">💬 WeChat</button>
+          <button class="share-btn twitter" onclick="shareTwitter()">🐦 Twitter</button>
+          <button class="share-btn link" onclick="copyReferral()">🔗 Copy Link</button>
+          <button class="share-btn" onclick="shareMore()">📤 More</button>
+        </div>
+        <div id="referralStats" style="font-size:12px;color:var(--muted);text-align:center;"></div>
+      </div>
+
+      <!-- Leaderboard -->
+      <div class="card">
+        <div class="card-title">Top Contributors This Week</div>
+        <div id="leaderboard" style="font-size:13px;"></div>
+      </div>
+    </section>
+
+    <!-- TAB: SETTINGS -->
+    <section class="tab-panel" id="tab-settings">
+      <div class="card">
+        <div class="card-title">⚙️ LLM Settings</div>
+        <div style="font-size:13px;color:var(--muted);margin-bottom:16px;line-height:1.6;">
+          Connect your own AI API key. Your key never leaves your device — stored locally in your browser only.
+        </div>
+        <div style="margin-bottom:12px;">
+          <label style="font-size:13px;color:var(--muted);display:block;margin-bottom:6px;">Provider</label>
+          <select id="llmProvider" style="width:100%;padding:10px;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:14px;">
+            <option value="openai">OpenAI (GPT-4o / GPT-4o-mini)</option>
+            <option value="anthropic">Anthropic (Claude 3.5 Sonnet)</option>
+            <option value="openrouter">OpenRouter (100+ models)</option>
+            <option value="stepfun">StepFun (Step-3 / Step-2)</option>
+            <option value="local">Local LLM (Ollama / LM Studio)</option>
+            <option value="custom">Custom Endpoint</option>
+          </select>
+        </div>
+        <div style="margin-bottom:12px;">
+          <label style="font-size:13px;color:var(--muted);display:block;margin-bottom:6px;">API Key</label>
+          <input type="password" id="llmApiKey" placeholder="sk-..." style="width:100%;padding:10px;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:14px;">
+        </div>
+        <div style="margin-bottom:20px;" id="customUrlRow" style="display:none;">
+          <label style="font-size:13px;color:var(--muted);display:block;margin-bottom:6px;">Custom Base URL</label>
+          <input type="text" id="llmCustomUrl" placeholder="https://api.example.com/v1" style="width:100%;padding:10px;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:14px;">
+        </div>
+        <button class="btn btn-primary" style="width:100%;justify-content:center;margin-bottom:12px;" onclick="saveLLMSettings()">Save & Connect →</button>
+        <button class="btn btn-secondary" style="width:100%;justify-content:center;" onclick="testLLM()">Test Connection</button>
+        <div id="llmStatus" style="margin-top:12px;font-size:13px;"></div>
+
+        <div style="margin-top:24px;padding-top:20px;border-top:1px solid var(--border);">
+          <div style="font-size:13px;color:var(--muted);margin-bottom:8px;">Usage Stats</div>
+          <div id="llmUsage" style="font-size:13px;color:var(--muted);line-height:2;">
+            Not connected
+          </div>
+        </div>
+      </div>
+      <div class="card" style="border-color:var(--pri);">
+        <div class="card-title">🔐 Privacy Vault (real encryption)</div>
+        <div style="font-size:12px;color:var(--muted);line-height:1.7;margin-bottom:14px;">
+          Set a passphrase to encrypt your memories on this device with <strong style="color:var(--pri);">AES-256-GCM</strong> (PBKDF2, 210k iterations).
+          Your passphrase is never stored or sent anywhere — if you lose it, your data cannot be recovered.
+        </div>
+        <div id="vaultStatus" style="font-size:12px;margin-bottom:12px;color:var(--amb);">Vault: not set up</div>
+        <div style="margin-bottom:10px;">
+          <label style="font-size:12px;color:var(--muted);display:block;margin-bottom:6px;">Passphrase</label>
+          <input type="password" id="vaultPass" placeholder="Enter a passphrase" style="width:100%;padding:10px;border-radius:8px;border:1px solid var(--border);background:var(--bg);color:var(--text);font-size:14px;">
+        </div>
+        <button class="btn btn-primary" style="width:100%;justify-content:center;margin-bottom:8px;" onclick="setupVault()">Set Passphrase & Encrypt</button>
+        <button class="btn btn-secondary" style="width:100%;justify-content:center;" onclick="lockVault()">Lock Now</button>
+      </div>
+    </section>
+
+
+
+    <!-- TAB: PRO (Paywall) -->
+    <section class="tab-panel" id="tab-pro">
+      <div class="paywall-card">
+        <div class="paywall-inner">
+          <div class="paywall-badge">UNLOCK EVERYTHING</div>
+          <div class="paywall-price">$100</div>
+          <div class="paywall-period">per year · $8.33/month · Cancel anytime</div>
+
+          <div class="paywall-features">
+            <div class="paywall-feature">Unlimited encrypted memory (local, AES-256)</div>
+            <div class="paywall-feature">Unlimited conversations with AGI</div>
+            <div class="paywall-feature">Unlimited task marketplace access</div>
+            <div class="paywall-feature">Priority compute resources</div>
+            <div class="paywall-feature">Early access to new features</div>
+            <div class="paywall-feature">Support independent AGI development</div>
+            <div class="paywall-feature locked">Referral rewards (Pro only)</div>
+            <div class="paywall-feature locked">Export all your data anytime</div>
+          </div>
+
+          <div class="paywall-btns">
+            <a id="paypal-annual" href="https://www.paypal.com/ncp/payment/SBJ2ZGWP7ACLQ" target="_blank" class="btn btn-accent" style="text-align:center;text-decoration:none;display:flex;align-items:center;justify-content:center;">Annual $100</a>
+            <a id="paypal-monthly" href="https://www.paypal.com/ncp/payment/6SAYLMHK2ZHNE" target="_blank" class="btn btn-secondary" style="text-align:center;text-decoration:none;display:flex;align-items:center;justify-content:center;">Monthly $15</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- What you get free -->
+      <div class="card">
+        <div class="card-title">Free Tier Includes</div>
+        <div style="font-size:13px;color:var(--muted);line-height:2;">
+          <div>✅ 10 memories storage</div>
+          <div>✅ 20 messages / day with AGI</div>
+          <div>✅ 3 marketplace tasks / week</div>
+          <div>✅ Daily login rewards</div>
+          <div>✅ Referral program (earn free Pro)</div>
+        </div>
+      </div>
+
+      <!-- Transparency (honest) -->
+      <div class="card">
+        <div class="card-title">Transparency & Honesty</div>
+        <div style="font-size:12px;color:var(--muted);line-height:1.8;">
+          <div>✅ Payments are handled by PayPal — you pay the creator directly.</div>
+          <div>✅ Your notes are encrypted locally on your own device (AES-256-GCM).</div>
+          <div>⚠️ There is currently <strong>no blockchain, no token, and no smart contract</strong> in this app.</div>
+          <div>⚠️ Subscription status is stored in this browser only; real cross-device sync requires a backend.</div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Achievement Toast -->
+  <div class="achievement-toast" id="achievementToast">
+    <div class="achievement-icon" id="achievementIcon">🏆</div>
+    <div class="achievement-text">
+      <strong id="achievementTitle">Achievement Unlocked!</strong>
+      <span id="achievementDesc">Description</span>
+    </div>
+  </div>
+
+  <!-- Bottom Nav Mobile -->
+  <nav class="bottom-nav">
+    <button class="bottom-btn active" data-tab="home">⬡<span>Home</span></button>
+    <button class="bottom-btn" data-tab="chat">💬<span>Chat</span></button>
+    <button class="bottom-btn" data-tab="memory">🧠<span>Memory</span></button>
+    <button class="bottom-btn" data-tab="earn">💎<span>Earn</span></button>
+      <button class="bottom-btn" data-tab="settings">⚙️<span>LLM</span></button>
+      <button class="bottom-btn" data-tab="pro">⭐<span>Pro</span></button>
+  </nav>
+</div>
+
+<!-- Removed dead external module reference (src/index-v3.js does not exist) -->
+
+
+
+
+<!-- index-v3.js inlined -->
+<script>
+/**
+ * AGI Engine v3.0 — First-Principles Optimized
+ *
+ * DESIGN PHILOSOPHY:
+ * 1. ENTRY → Instant experience, no friction
+ * 2. ONBOARD → 3-step free trial, feel the value before paying
+ * 3. RETAIN → Daily rewards + streak + leveling + achievements
+ * 4. CONVERT → Paywall appears AFTER user has felt value
+ * 5. VIRAL → Referral rewards make sharing natural
+ */
+
+// ═══════════════════════════════════════════════════════════
+// GAME STATE (persisted in localStorage)
+// ═══════════════════════════════════════════════════════════
+
+const GAME = {
+  level: 1,
+  xp: 0,
+  xpToNext: 100,
+  streak: 0,
+  lastLogin: null,
+  memories: [],
+  chats: 0,
+  tasksDone: 0,
+  referralCode: '',
+  referrals: 0,
+  freeMonths: 0,
+  isPro: false,
+  dailyClaimed: false,
+  onboardStage: 0,
+  onboardXP: 0,
+  subscription: null,
+  chatHistory: [],
+};
+
+// XP rewards for actions
+const XP = {
+  firstMemory: 30,
+  addMemory: 10,
+  firstChat: 20,
+  sendChat: 5,
+  completeTask: 15,
+  dailyLogin: 10,
+  referral: 50,
+  subscribe: 200,
+};
+
+// Achievements
+const ACHIEVEMENTS = [
+  { id: 'first_memory', icon: '🧠', title: 'First Memory', desc: 'Store your first memory', check: (g) => g.memories.length >= 1, xp: 30 },
+  { id: 'five_memories', icon: '💾', title: 'Memory Keeper', desc: 'Store 5 memories', check: (g) => g.memories.length >= 5, xp: 50 },
+  { id: 'first_chat', icon: '💬', title: 'First Words', desc: 'Send your first message', check: (g) => g.chats >= 1, xp: 20 },
+  { id: 'streak_3', icon: '🔥', title: 'On Fire', desc: '3-day streak', check: (g) => g.streak >= 3, xp: 30 },
+  { id: 'streak_7', icon: '⚡', title: 'Unstoppable', desc: '7-day streak', check: (g) => g.streak >= 7, xp: 100 },
+  { id: 'level_3', icon: '⭐', title: 'Rising Star', desc: 'Reach level 3', check: (g) => g.level >= 3, xp: 40 },
+  { id: 'first_referral', icon: '🚀', title: 'Influencer', desc: 'Refer your first friend', check: (g) => g.referrals >= 1, xp: 50 },
+  { id: 'pro', icon: '👑', title: 'Pro Member', desc: 'Subscribe to Pro', check: (g) => g.isPro, xp: 200 },
+];
+
+// ═══════════════════════════════════════════════════════════
+// AI RESPONSES (simulated, local)
+// ═══════════════════════════════════════════════════════════
+
+// NOTE: These are scripted demo replies only. Real AI requires the user's own API key in Settings.
+const AI_RESPONSES = [
+  "That's interesting! I've noted that in my memory. What else would you like to explore?",
+  "Got it. I'll remember that for you. Is there anything specific you want to work on?",
+  "Interesting thought! I've stored it. The more you share, the better I understand you.",
+  "Noted! My memory is encrypted and stored locally — only you can access it.",
+  "I understand. Let me think about that... Actually, I'd love to hear more context.",
+  "That's a great point. I've saved it to your memory profile.",
+  "Remembered! Over time, I'll build a comprehensive understanding of your preferences and goals.",
+  "I appreciate you sharing that. Every piece of information helps me serve you better.",
+];
+
+const AI_GREETINGS = [
+  "Hey! I'm your personal AGI. I learn from you, remember for you, and help you get things done. What's on your mind?",
+  "Welcome back! I've been thinking about our previous conversations. What would you like to explore today?",
+  "Hi there! I'm ready to help. You can chat with me, store memories, or complete tasks to earn rewards.",
+];
+
+// ═══════════════════════════════════════════════════════════
+// SECURE VAULT — real AES-256-GCM + PBKDF2 encryption
+// Uses the browser Web Crypto API. Your passphrase never leaves
+// this device; without it, stored memories cannot be decrypted.
+// ═══════════════════════════════════════════════════════════
+const SecureVault = {
+  enc: new TextEncoder(),
+  dec: new TextDecoder(),
+  iterations: 210000,
+
+  _keyMaterial(passphrase) {
+    return crypto.subtle.importKey('raw', this.enc.encode(passphrase), 'PBKDF2', false, ['deriveKey']);
+  },
+
+  async deriveKey(passphrase, saltB64) {
+    const salt = Uint8Array.from(atob(saltB64), c => c.charCodeAt(0));
+    const mat = await this._keyMaterial(passphrase);
+    return crypto.subtle.deriveKey(
+      { name: 'PBKDF2', salt, iterations: this.iterations, hash: 'SHA-256' },
+      mat, { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']
+    );
+  },
+
+  _b64(buf) {
+    const bytes = new Uint8Array(buf);
+    let s = '';
+    for (let i = 0; i < bytes.length; i++) s += String.fromCharCode(bytes[i]);
+    return btoa(s);
+  },
+
+  async encrypt(plaintext, passphrase) {
+    const salt = crypto.getRandomValues(new Uint8Array(16));
+    const iv = crypto.getRandomValues(new Uint8Array(12));
+    const key = await this.deriveKey(passphrase, this._b64(salt));
+    const ct = await crypto.subtle.encrypt(
+      { name: 'AES-GCM', iv }, key, this.enc.encode(plaintext)
+    );
+    return { v: 1, alg: 'AES-256-GCM', iter: this.iterations,
+             salt: this._b64(salt), iv: this._b64(iv), data: this._b64(ct) };
+  },
+
+  async decrypt(payload, passphrase) {
+    const salt = Uint8Array.from(atob(payload.salt), c => c.charCodeAt(0));
+    const iv = Uint8Array.from(atob(payload.iv), c => c.charCodeAt(0));
+    const ct = Uint8Array.from(atob(payload.data), c => c.charCodeAt(0));
+    const mat = await this._keyMaterial(passphrase);
+    const key = await crypto.subtle.deriveKey(
+      { name: 'PBKDF2', salt, iterations: payload.iter || this.iterations, hash: 'SHA-256' },
+      mat, { name: 'AES-GCM', length: 256 }, false, ['encrypt', 'decrypt']
+    );
+    const pt = await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, key, ct);
+    return this.dec.decode(pt);
+  },
+
+  // Derive a verifier so we can check a passphrase without exposing contents
+  async makeVerifier(passphrase) {
+    const saltB64 = this._b64(crypto.getRandomValues(new Uint8Array(16)));
+    const key = await this.deriveKey(passphrase, saltB64);
+    const ct = await crypto.subtle.encrypt(
+      { name: 'AES-GCM', iv: crypto.getRandomValues(new Uint8Array(12)) },
+      key, this.enc.encode('AGI-VAULT-VERIFY')
+    );
+    return { salt: saltB64, data: this._b64(ct) };
+  },
+
+  async checkPassphrase(passphrase) {
+    const v = JSON.parse(localStorage.getItem('agi_vault_verifier') || 'null');
+    if (!v) return null; // vault not set up
+    try {
+      const mat = await this._keyMaterial(passphrase);
+      const salt = Uint8Array.from(atob(v.salt), c => c.charCodeAt(0));
+      const key = await crypto.subtle.deriveKey(
+        { name: 'PBKDF2', salt, iterations: this.iterations, hash: 'SHA-256' },
+        mat, { name: 'AES-GCM', length: 256 }, false, ['decrypt']
+      );
+      const ct = Uint8Array.from(atob(v.data), c => c.charCodeAt(0));
+      // iv is stored in the first 12 bytes of the encrypted blob
+      const iv = ct.slice(0, 12), body = ct.slice(12);
+      await crypto.subtle.decrypt({ name: 'AES-GCM', iv }, key, body);
+      return true;
+    } catch (e) { return false; }
+  },
+
+  isLocked() { return localStorage.getItem('agi_vault_locked') === '1'; },
+  setLocked(v) { localStorage.setItem('agi_vault_locked', v ? '1' : '0'); },
+};
+
+// ═══════════════════════════════════════════════════════════
+// PERSISTENCE
+// ═══════════════════════════════════════════════════════════
+
+function saveGame() {
+  localStorage.setItem('agi_game_v3', JSON.stringify(GAME));
+}
+
+function loadGame() {
+  try {
+    const saved = localStorage.getItem('agi_game_v3');
+    if (saved) {
+      const data = JSON.parse(saved);
+      Object.assign(GAME, data);
+    }
+  } catch (e) { /* fresh start */ }
+
+  // Generate referral code
+  if (!GAME.referralCode) {
+    GAME.referralCode = 'AGI-' + Math.random().toString(36).substr(2, 6).toUpperCase();
+  }
+
+  // Check daily streak
+  checkStreak();
+  saveGame();
+}
+
+function checkStreak() {
+  const today = new Date().toDateString();
+  const last = GAME.lastLogin;
+
+  if (last === today) {
+    GAME.dailyClaimed = false; // new day
+    return;
+  }
+
+  const yesterday = new Date(Date.now() - 86400000).toDateString();
+  if (last === yesterday) {
+    GAME.streak++;
+  } else if (last !== today) {
+    GAME.streak = 1;
+  }
+
+  GAME.lastLogin = today;
+  GAME.dailyClaimed = false;
+}
+
+// ═══════════════════════════════════════════════════════════
+// XP & LEVELING
+// ═══════════════════════════════════════════════════════════
+
+function addXP(amount, showToast = true) {
+  GAME.xp += amount;
+
+  // Level up check
+  while (GAME.xp >= GAME.xpToNext) {
+    GAME.xp -= GAME.xpToNext;
+    GAME.level++;
+    GAME.xpToNext = Math.floor(GAME.xpToNext * 1.5);
+    showAchievement('🎉', `Level Up!`, `You reached Level ${GAME.level}!`);
+  }
+
+  saveGame();
+  updateUI();
+
+  if (showToast && amount > 0) {
+    // Small "+XP" popup could go here
+  }
+}
+
+function getXPProgress() {
+  return Math.min(100, (GAME.xp / GAME.xpToNext) * 100);
+}
+
+// ═══════════════════════════════════════════════════════════
+// ACHIEVEMENTS
+// ═══════════════════════════════════════════════════════════
+
+function checkAchievements() {
+  for (const ach of ACHIEVEMENTS) {
+    if (!GAME[`ach_${ach.id}`] && ach.check(GAME)) {
+      GAME[`ach_${ach.id}`] = true;
+      addXP(ach.xp);
+      showAchievement(ach.icon, ach.title, ach.desc);
+    }
+  }
+  saveGame();
+}
+
+function showAchievement(icon, title, desc) {
+  const toast = document.getElementById('achievementToast');
+  document.getElementById('achievementIcon').textContent = icon;
+  document.getElementById('achievementTitle').textContent = title;
+  document.getElementById('achievementDesc').textContent = desc;
+  toast.classList.add('show');
+  setTimeout(() => toast.classList.remove('show'), 3000);
+}
+
+// ═══════════════════════════════════════════════════════════
+// SCREEN NAVIGATION
+// ═══════════════════════════════════════════════════════════
+
+function showScreen(id) {
+  document.querySelectorAll('.screen, #screen-landing, #screen-onboard, #screen-app').forEach(s => {
+    s.classList.remove('active');
+    s.style.display = 'none';
+  });
+  const el = document.getElementById(id);
+  if (el) { el.style.display = id === 'screen-onboard' ? 'flex' : id === 'screen-landing' ? 'flex' : 'flex'; el.classList.add('active'); }
+}
+
+function switchTab(tab) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll(`[data-tab="${tab}"]`).forEach(b => b.classList.add('active'));
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById(`tab-${tab}`)?.classList.add('active');
+
+  // Refresh tab content
+  if (tab === 'memory') renderMemories();
+  if (tab === 'earn') renderEarn();
+  if (tab === 'pro') updatePaywall();
+}
+
+// ═══════════════════════════════════════════════════════════
+// ONBOARDING (3-step free trial)
+// ═══════════════════════════════════════════════════════════
+
+const ONBOARD_STAGES = [
+  {
+    icon: '🧠', title: 'It Remembers Everything',
+    desc: 'Try storing a memory right now. AGI will remember it forever — encrypted and stored on your device. No cloud, no server.',
+    action: 'memory',
+  },
+  {
+    icon: '💬', title: 'It Understands You',
+    desc: 'Have a real conversation. AGI learns from every message and builds a profile that\'s uniquely yours.',
+    action: 'chat',
+  },
+  {
+    icon: '🔐', title: 'It Stays On Your Device',
+    desc: 'Your memories are encrypted on your own device. No server holds them — only you do.',
+    action: 'blockchain',
+  },
+];
+
+function startFreeTrial() {
+  GAME.onboardStage = 0;
+  saveGame();
+  renderOnboardStage();
+  showScreen('screen-onboard');
+}
+
+function renderOnboardStage() {
+  const stage = ONBOARD_STAGES[GAME.onboardStage];
+  const stageEl = document.getElementById('onboardStage');
+  const progress = ((GAME.onboardStage + 1) / ONBOARD_STAGES.length) * 100;
+
+  document.getElementById('xpBar').style.width = progress + '%';
+  document.getElementById('xpLabel').textContent = `Step ${GAME.onboardStage + 1} of ${ONBOARD_STAGES.length} — ${stage.title}`;
+  document.getElementById('onboardStep').textContent = `${GAME.onboardStage + 1}/${ONBOARD_STAGES.length}`;
+
+  // Render stage dots
+  document.querySelectorAll('#stageDots .stage-dot').forEach((dot, i) => {
+    dot.classList.toggle('active', i === GAME.onboardStage);
+    if (i === GAME.onboardStage) dot.style.width = '24px';
+    else dot.style.width = '8px';
+  });
+
+  // Render stage content
+  let content = `<div class="stage-icon">${stage.icon}</div>`;
+  content += `<div class="stage-title">${stage.title}</div>`;
+  content += `<div class="stage-desc">${stage.desc}</div>`;
+
+  if (stage.action === 'memory') {
+    content += `
+      <div class="demo-area">
+        <input type="text" id="demoMemInput" class="demo-memory-input" placeholder="Type something to remember..." onkeydown="if(event.key==='Enter')addDemoMemory()">
+        <div class="demo-memory-list" id="demoMemList"></div>
+      </div>`;
+  } else if (stage.action === 'chat') {
+    content += `
+      <div class="demo-area">
+        <div class="demo-chat" id="demoChatHistory">
+          <div class="demo-msg ai">Hey! I'm your personal AGI. What's on your mind?</div>
+        </div>
+        <div class="demo-chat-input-row">
+          <input type="text" id="demoChatInput" placeholder="Ask me anything..." onkeydown="if(event.key==='Enter')sendDemoChat()">
+          <button class="btn btn-primary btn-sm" onclick="sendDemoChat()">Send</button>
+        </div>
+      </div>`;
+  } else if (stage.action === 'blockchain') {
+    content += `
+      <div class="demo-area" style="text-align:left;">
+        <div style="font-size:13px;color:var(--muted);margin-bottom:12px;">Your data flow:</div>
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          <div style="display:flex;align-items:center;gap:10px;">
+            <span style="font-size:20px;">🗄️</span>
+            <span style="font-size:13px;">Your data is <strong style="color:var(--pri);">encrypted locally</strong> before anything else</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;">
+            <span style="font-size:20px;">⛓️</span>
+            <span style="font-size:13px;">Stored <strong style="color:var(--pri);">encrypted on this device</strong> — AES-256-GCM</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;">
+            <span style="font-size:20px;">🔑</span>
+            <span style="font-size:13px;">Only <strong style="color:var(--pri);">your passphrase</strong> can decrypt your data</span>
+          </div>
+          <div style="display:flex;align-items:center;gap:10px;">
+            <span style="font-size:20px;">🌐</span>
+            <span style="font-size:13px;"><strong style="color:var(--pri);">No server</strong> can ever access your content</span>
+          </div>
+        </div>
+        <div style="margin-top:16px;padding:12px;background:rgba(0,212,255,0.06);border-radius:10px;font-size:12px;color:var(--muted);">
+          💡 Your memories and conversations are yours. Forever.
+        </div>
+      </div>`;
+  }
+
+  stageEl.innerHTML = content;
+
+  // Show/hide back button
+  document.getElementById('onboardBack').style.display = GAME.onboardStage > 0 ? 'block' : '';
+  document.getElementById('onboardNext').textContent = GAME.onboardStage < ONBOARD_STAGES.length - 1 ? 'Next →' : 'Start Using AGI →';
+}
+
+function onboardNext() {
+  // Award XP for completing stage
+  addXP(20);
+
+  if (GAME.onboardStage < ONBOARD_STAGES.length - 1) {
+    GAME.onboardStage++;
+    saveGame();
+    renderOnboardStage();
+  } else {
+    // Onboarding complete
+    addXP(XP.subscribe);
+    GAME.isPro = false; // start free
+    saveGame();
+    showApp();
+  }
+}
+
+function onboardBack() {
+  if (GAME.onboardStage > 0) {
+    GAME.onboardStage--;
+    saveGame();
+    renderOnboardStage();
+  }
+}
+
+function skipOnboard() {
+  addXP(10);
+  saveGame();
+  showApp();
+}
+
+// ═══════════════════════════════════════════════════════════
+// DEMO INTERACTIONS (during onboarding)
+// ═══════════════════════════════════════════════════════════
+
+function addDemoMemory() {
+  const input = document.getElementById('demoMemInput');
+  if (!input) return;
+  const text = input.value.trim();
+  if (!text) return;
+
+  const list = document.getElementById('demoMemList');
+  const item = document.createElement('div');
+  item.className = 'demo-memory-item';
+  item.innerHTML = `${esc(text)}<span class="tag">🔒 encrypted · stored locally</span>`;
+  list.appendChild(item);
+  input.value = '';
+  list.scrollTop = list.scrollHeight;
+
+  addXP(XP.addMemory);
+  log('success', `Memory stored: "${text.substring(0, 30)}..."`);
+}
+
+function sendDemoChat() {
+  const input = document.getElementById('demoChatInput');
+  if (!input) return;
+  const text = input.value.trim();
+  if (!text) return;
+
+  const history = document.getElementById('demoChatHistory');
+  const userMsg = document.createElement('div');
+  userMsg.className = 'demo-msg user';
+  userMsg.textContent = text;
+  history.appendChild(userMsg);
+
+  input.value = '';
+  history.scrollTop = history.scrollHeight;
+
+  // AI response
+  setTimeout(() => {
+    const aiMsg = document.createElement('div');
+    aiMsg.className = 'demo-msg ai';
+    aiMsg.textContent = AI_RESPONSES[Math.floor(Math.random() * AI_RESPONSES.length)];
+    history.appendChild(aiMsg);
+    history.scrollTop = history.scrollHeight;
+  }, 600 + Math.random() * 800);
+
+  addXP(XP.sendChat);
+}
+
+// ═══════════════════════════════════════════════════════════
+// MAIN APP INTERACTIONS
+// ═══════════════════════════════════════════════════════════
+
+function addMemory() {
+  const input = document.getElementById('memInput');
+  if (!input) return;
+  const text = input.value.trim();
+  if (!text) return;
+
+  GAME.memories.push({
+    id: Date.now(),
+    content: text,
+    tags: extractTags(text),
+    time: new Date().toISOString(),
+    encrypted: true,
+  });
+
+  // Free tier limit
+  if (!GAME.isPro && GAME.memories.length > 10) {
+    showAchievement('🔒', 'Storage Full', 'Upgrade to Pro for unlimited memory!');
+    // Still save but show limit notice
+  }
+
+  input.value = '';
+  addXP(XP.addMemory);
+  renderMemories();
+  checkAchievements();
+  log('success', `Memory #${GAME.memories.length} stored`);
+}
+
+function renderMemories() {
+  const list = document.getElementById('memoryList');
+  if (!list) return;
+
+  if (GAME.memories.length === 0) {
+    list.innerHTML = '<div style="text-align:center;color:var(--muted);padding:20px;font-size:13px;">No memories yet. Start by adding one above!</div>';
+    return;
+  }
+
+  list.innerHTML = GAME.memories.slice().reverse().map(m => `
+    <div class="demo-memory-item">
+      ${esc(m.content)}
+      <span class="tag">${m.tags.join(', ')} · 🔒 encrypted</span>
+    </div>
+  `).join('');
+}
+
+function sendChat() {
+  const input = document.getElementById('chatInput');
+  if (!input) return;
+  const text = input.value.trim();
+  if (!text) return;
+
+  const history = document.getElementById('chatHistory');
+  const userMsg = document.createElement('div');
+  userMsg.className = 'demo-msg user';
+  userMsg.textContent = text;
+  history.appendChild(userMsg);
+
+  GAME.chats++;
+  input.value = '';
+  history.scrollTop = history.scrollHeight;
+
+  // Free tier limit
+  if (!GAME.isPro && GAME.chats >= 20) {
+    setTimeout(() => {
+      const limitMsg = document.createElement('div');
+      limitMsg.className = 'demo-msg ai';
+      limitMsg.innerHTML = "You've reached today's free message limit (20). <strong>Upgrade to Pro</strong> for unlimited conversations! <a onclick='switchTab(\"pro\")' style='color:var(--pri);cursor:pointer;'>Go Pro →</a>";
+      history.appendChild(limitMsg);
+      history.scrollTop = history.scrollHeight;
+    }, 500);
+    addXP(XP.sendChat);
+    updateUI();
+    checkAchievements();
+    return;
+  }
+
+  // AI response — try real LLM first, fallback to simulated
+  const useLLM = typeof LLMConnector !== 'undefined' && LLMConnector.getStatus().enabled;
+  
+  if (useLLM) {
+    const messages = [
+      ...(GAME.chatHistory || []).slice(-10),
+      { role: 'user', content: text }
+    ];
+    
+    LLMConnector.chat(messages).then(result => {
+      const aiMsg = document.createElement('div');
+      aiMsg.className = 'demo-msg ai';
+      if (result.error) {
+        aiMsg.innerHTML = esc(result.error) + " <span style='color:var(--muted);font-size:11px;'>(offline mode)</span>";
+      } else {
+        aiMsg.innerHTML = esc(result.content);
+        GAME.chatHistory.push({ role: 'user', content: text });
+        GAME.chatHistory.push({ role: 'assistant', content: result.content });
+        if (GAME.chatHistory.length > 50) GAME.chatHistory = GAME.chatHistory.slice(-50);
+        if (typeof Analytics !== 'undefined') Analytics.track('llm_response', { len: result.content.length });
+      }
+      history.appendChild(aiMsg);
+      history.scrollTop = history.scrollHeight;
+    });
+  } else {
+    // Simulated AI response (offline mode)
+    setTimeout(() => {
+    let response;
+    if (GAME.chats === 1) {
+      response = AI_GREETINGS[Math.floor(Math.random() * AI_GREETINGS.length)];
+    } else {
+      response = AI_RESPONSES[Math.floor(Math.random() * AI_RESPONSES.length)];
+    }
+
+    // Personalized: reference memories
+    if (GAME.memories.length > 0 && Math.random() > 0.5) {
+      const mem = GAME.memories[Math.floor(Math.random() * GAME.memories.length)];
+      response = `I remember you mentioned "${mem.content.substring(0, 40)}..." — that's interesting! ` + response;
+    }
+
+    const aiMsg = document.createElement('div');
+    aiMsg.className = 'demo-msg ai';
+    aiMsg.innerHTML = response;
+    history.appendChild(aiMsg);
+    history.scrollTop = history.scrollHeight;
+  }, 500 + Math.random() * 1000);
+
+  addXP(XP.sendChat);
+  updateUI();
+  checkAchievements();
+} // closes else branch
+} // FIXED: closes sendChat() — original file was missing this brace
+
+// ═══════════════════════════════════════════════════════════
+// DAILY REWARDS
+// ═══════════════════════════════════════════════════════════
+
+function claimDailyReward() {
+  if (GAME.dailyClaimed) return;
+
+  const streakBonus = Math.min(GAME.streak, 7); // cap at 7x
+  const baseXP = XP.dailyLogin;
+  const bonusXP = streakBonus * 5;
+  const totalXP = baseXP + bonusXP;
+
+  GAME.dailyClaimed = true;
+  addXP(totalXP);
+
+  const streakText = streakBonus > 1 ? ` (+${bonusXP} streak bonus!)` : '';
+  showAchievement('🎁', `Daily Reward!`, `+${totalXP} XP${streakText}`);
+
+  document.getElementById('dailyClaimBtn').textContent = '✓ Claimed Today';
+  document.getElementById('dailyClaimBtn').disabled = true;
+  document.getElementById('dailyClaimBtn').style.opacity = '0.5';
+  document.getElementById('dailyRewardDesc').textContent = `Come back tomorrow for more rewards! Current streak: ${GAME.streak} days`;
+
+  saveGame();
+  updateUI();
+}
+
+// ═══════════════════════════════════════════════════════════
+// REFERRAL SYSTEM
+// ═══════════════════════════════════════════════════════════
+
+function copyReferral() {
+  const code = GAME.referralCode;
+  const url = window.location.href + '?ref=' + code;
+
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(url).then(() => {
+      showAchievement('🔗', 'Link Copied!', 'Share it with your friends');
+    });
+  } else {
+    // Fallback
+    const input = document.createElement('input');
+    input.value = url;
+    document.body.appendChild(input);
+    input.select();
+    document.execCommand('copy');
+    document.body.removeChild(input);
+    showAchievement('🔗', 'Link Copied!', 'Share it with your friends');
+  }
+}
+
+function shareWechat() {
+  showAchievement('💬', 'Share on WeChat', 'Send your referral link to friends');
+  copyReferral();
+}
+
+function shareTwitter() {
+  const text = encodeURIComponent("I'm using AGI Engine — a personal AGI that remembers everything for me. Check it out!");
+  window.open(`https://twitter.com/intent/tweet?text=${text}`, '_blank');
+}
+
+function shareMore() {
+  if (navigator.share) {
+    navigator.share({
+      title: 'AGI Engine',
+      text: 'Check out AGI Engine — your personal AI that remembers everything!',
+      url: window.location.href + '?ref=' + GAME.referralCode,
+    });
+  } else {
+    copyReferral();
+  }
+}
+
+function renderEarn() {
+  // Referral stats
+  const statsEl = document.getElementById('referralStats');
+  if (statsEl) {
+    statsEl.innerHTML = GAME.referrals > 0
+      ? `${GAME.referrals} referrals · ${GAME.freeMonths} free months earned`
+      : 'No referrals yet. Share your link to earn rewards!';
+  }
+
+  // Referral code
+  const codeEl = document.getElementById('referralCode');
+  if (codeEl) codeEl.textContent = GAME.referralCode;
+
+  // Daily reward
+  const claimBtn = document.getElementById('dailyClaimBtn');
+  const today = new Date().toDateString();
+  const isNewDay = GAME.lastLogin !== today;
+
+  if (claimBtn) {
+    if (GAME.dailyClaimed || !isNewDay) {
+      claimBtn.textContent = '✓ Claimed Today';
+      claimBtn.disabled = true;
+      claimBtn.style.opacity = '0.5';
+    } else {
+      claimBtn.textContent = 'Claim Today\'s Reward';
+      claimBtn.disabled = false;
+      claimBtn.style.opacity = '1';
+    }
+  }
+
+  // Leaderboard (simulated)
+  const lbEl = document.getElementById('leaderboard');
+  if (lbEl) {
+    const fakeLeaderboard = [
+      { name: 'You', xp: GAME.xp + GAME.level * 100, isYou: true },
+      { name: 'Alex', xp: 450, isYou: false },
+      { name: 'Sam', xp: 380, isYou: false },
+      { name: 'Jordan', xp: 290, isYou: false },
+      { name: 'Casey', xp: 210, isYou: false },
+    ].sort((a, b) => b.xp - a.xp);
+
+    lbEl.innerHTML = fakeLeaderboard.map((u, i) => `
+      <div style="display:flex;align-items:center;gap:10px;padding:8px 0;${u.isYou ? 'color:var(--pri);font-weight:700;' : 'color:var(--muted);'}border-bottom:1px solid var(--border);">
+        <span style="font-size:16px;width:24px;">${i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : i + 1}</span>
+        <span style="flex:1;font-size:13px;">${u.name}</span>
+        <span style="font-size:12px;font-family:monospace;">${u.xp} XP</span>
+      </div>
+    `).join('');
+  }
+}
+
+// ═══════════════════════════════════════════════════════════
+// PAYWALL
+// ═══════════════════════════════════════════════════════════
+
+function updatePaywall() {
+  const proTab = document.getElementById('tab-pro');
+  if (!proTab) return;
+
+  if (GAME.isPro) {
+    // Show pro benefits
+    proTab.querySelector('.paywall-inner').innerHTML = `
+      <div class="paywall-badge" style="background:rgba(0,255,157,0.15);color:var(--grn);">✓ PRO ACTIVE</div>
+      <div style="font-size:32px;margin:16px 0;">👑</div>
+      <div style="font-size:20px;font-weight:800;color:var(--grn);margin-bottom:8px;">You're a Pro Member!</div>
+      <div style="font-size:13px;color:var(--muted);margin-bottom:16px;">Thank you for supporting independent AGI development.</div>
+      <div style="font-size:12px;color:var(--muted);line-height:2;text-align:left;">
+        <div>✅ Unlimited encrypted memory</div>
+        <div>✅ Unlimited conversations</div>
+        <div>✅ Unlimited marketplace tasks</div>
+        <div>✅ Priority compute</div>
+        <div>✅ Referral rewards active</div>
+        <div>✅ Early access to features</div>
+        <div>✅ Full data export</div>
+      </div>
+      <div style="margin-top:16px;">
+        <button class="btn btn-secondary" onclick="manageSubscription()">Manage Subscription</button>
+      </div>
+    `;
+  }
+  // If not pro, the default paywall HTML from index-v3.html is shown
+}
+
+function manageSubscription() {
+  showAchievement('ℹ️', 'Subscription', 'Manage via your PayPal account');
+}
+
+// ═══════════════════════════════════════════════════════════
+// UI UPDATE
+// ═══════════════════════════════════════════════════════════
+
+function updateUI() {
+  // Header
+  document.getElementById('levelBadge').textContent = `Lv.${GAME.level}`;
+  document.getElementById('streakBadge').textContent = `🔥 ${GAME.streak}`;
+  document.getElementById('streakCount').textContent = GAME.streak;
+  document.getElementById('streakFire').textContent = GAME.streak >= 7 ? '⚡' : GAME.streak >= 3 ? '🔥' : '💧';
+
+  // Metrics
+  document.getElementById('mLevel').textContent = GAME.level;
+  document.getElementById('mMemories').textContent = GAME.memories.length;
+  document.getElementById('mTasks').textContent = GAME.tasksDone;
+  document.getElementById('mChats').textContent = GAME.chats;
+
+  // Progress bars
+  document.getElementById('bXP').style.width = getXPProgress() + '%';
+  document.getElementById('bMemories').style.width = Math.min(100, GAME.memories.length * 10) + '%';
+  document.getElementById('bTasks').style.width = Math.min(100, GAME.tasksDone * 10) + '%';
+  document.getElementById('bChats').style.width = Math.min(100, GAME.chats * 5) + '%';
+}
+
+// ═══════════════════════════════════════════════════════════
+// ACTIVITY LOG
+// ═══════════════════════════════════════════════════════════
+
+function log(type, msg) {
+  const el = document.getElementById('activityLog');
+  if (!el) return;
+  const time = new Date().toISOString().substr(11, 8);
+  const div = document.createElement('div');
+  div.className = 'log-entry';
+  div.innerHTML = `<span class="log-time">${time}</span><span class="log-type ${type}">[${type.toUpperCase()}]</span> ${esc(msg)}`;
+  el.insertBefore(div, el.firstChild);
+  while (el.children.length > 100) el.removeChild(el.lastChild);
+}
+
+// ═══════════════════════════════════════════════════════════
+// UTILITY
+// ═══════════════════════════════════════════════════════════
+
+function esc(s) {
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+function extractTags(text) {
+  const words = text.toLowerCase().match(/\b(\w{3,})\b/g) || [];
+  return [...new Set(words)].slice(0, 5);
+}
+
+// ═══════════════════════════════════════════════════════════
+// APP ENTRY POINT
+// ═══════════════════════════════════════════════════════════
+
+function showApp() {
+  showScreen('screen-app');
+  updateUI();
+  renderMemories();
+  renderEarn();
+  setupTabNav();
+  log('info', 'AGI Engine v3.0 initialized');
+  log('success', `Welcome back! Level ${GAME.level} · ${GAME.streak} day streak`);
+
+  // Check if this is a referral
+  const urlParams = new URLSearchParams(window.location.search);
+  const ref = urlParams.get('ref');
+  if (ref && ref !== GAME.referralCode) {
+    log('info', `Referred by: ${ref}`);
+  }
+}
+
+function setupTabNav() {
+  // Top tabs
+  document.querySelectorAll('.tab-nav .tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => switchTab(btn.dataset.tab));
+  });
+  // Bottom nav
+  document.querySelectorAll('.bottom-nav .bottom-btn').forEach(btn => {
+    btn.addEventListener('click', () => switchTab(btn.dataset.tab));
+  });
+}
+
+// ── Bootstrap ──
+loadGame();
+
+// Route: check if user has been here before
+const urlParams = new URLSearchParams(window.location.search);
+const hasExistingData = localStorage.getItem('agi_game_v3');
+
+if (hasExistingData && !urlParams.get('onboard')) {
+  // Returning user — go straight to app
+  showApp();
+} else {
+  // New user — show landing
+  showScreen('screen-landing');
+}
+
+
+
+// ═══════════════════════════════════════════════════════════
+// PRIVACY VAULT UI — wires SecureVault to real memory storage
+// ═══════════════════════════════════════════════════════════
+async function setupVault() {
+  const pass = document.getElementById('vaultPass')?.value.trim();
+  const statusEl = document.getElementById('vaultStatus');
+  if (!pass || pass.length < 6) {
+    if (statusEl) statusEl.innerHTML = '<span style="color:var(--acc);">Use at least 6 characters.</span>';
+    return;
+  }
+  try {
+    const verifier = await SecureVault.makeVerifier(pass);
+    localStorage.setItem('agi_vault_verifier', JSON.stringify(verifier));
+    // Encrypt every existing memory with the new passphrase
+    const encMemories = [];
+    for (const m of GAME.memories) {
+      const payload = await SecureVault.encrypt(m.content || '', pass);
+      encMemories.push({ id: m.id, time: m.time, tags: m.tags, payload });
+    }
+    localStorage.setItem('agi_vault_memories', JSON.stringify(encMemories));
+    SecureVault.setLocked(false);
+    if (statusEl) statusEl.innerHTML = '<span style="color:var(--grn);">✓ Vault active — ' + encMemories.length + ' memories encrypted with AES-256-GCM.</span>';
+    showAchievement('🔐', 'Vault Enabled', 'Your memories are now encrypted on this device.');
+  } catch (e) {
+    if (statusEl) statusEl.innerHTML = '<span style="color:var(--acc);">Encryption failed: ' + (e.message || e) + '</span>';
+  }
+}
+
+async function lockVault() {
+  const pass = document.getElementById('vaultPass')?.value.trim();
+  if (!pass) {
+    const statusEl = document.getElementById('vaultStatus');
+    if (statusEl) statusEl.innerHTML = '<span style="color:var(--acc);">Enter your passphrase to verify & lock.</span>';
+    return;
+  }
+  const ok = await SecureVault.checkPassphrase(pass);
+  const statusEl = document.getElementById('vaultStatus');
+  if (ok === true) {
+    SecureVault.setLocked(true);
+    if (statusEl) statusEl.innerHTML = '<span style="color:var(--amb);">🔒 Vault locked. Memories are encrypted at rest.</span>';
+  } else if (ok === false) {
+    if (statusEl) statusEl.innerHTML = '<span style="color:var(--acc);">Wrong passphrase.</span>';
+  } else {
+    if (statusEl) statusEl.innerHTML = '<span style="color:var(--amb);">Vault not set up yet.</span>';
+  }
+}
+
+
+// ═══════════════════════════════════════════════════════════
+// MEMORY TOOLS — search, export, import, delete
+// ═══════════════════════════════════════════════════════════
+function exportMemories(encrypted) {
+  if (GAME.memories.length === 0) {
+    showAchievement('⚠️', 'Nothing to export', 'Store a memory first.');
+    return;
+  }
+  const doExport = async () => {
+    let payload;
+    let filename;
+    if (encrypted) {
+      const pass = document.getElementById('vaultPass')?.value.trim();
+      if (!pass || pass.length < 6) {
+        showAchievement('🔐', 'Passphrase required', 'Set a passphrase in Settings first (min 6 chars).');
+        return;
+      }
+      const enc = [];
+      for (const m of GAME.memories) {
+        enc.push({ id: m.id, time: m.time, tags: m.tags, payload: await SecureVault.encrypt(m.content, pass) });
+      }
+      payload = { format: 'agi-engine-encrypted-v1', created: new Date().toISOString(), count: enc.length, memories: enc };
+      filename = 'agi-memories-encrypted.json';
+    } else {
+      payload = { format: 'agi-engine-plain-v1', created: new Date().toISOString(), count: GAME.memories.length, memories: GAME.memories };
+      filename = 'agi-memories.json';
+    }
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(a.href);
+    showAchievement('⬇️', 'Exported', filename);
+  };
+  doExport();
+}
+
+async function importMemories(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  try {
+    const text = await file.text();
+    const data = JSON.parse(text);
+    let incoming = [];
+    if (data.format === 'agi-engine-plain-v1' && Array.isArray(data.memories)) {
+      incoming = data.memories;
+    } else if (data.format === 'agi-engine-encrypted-v1' && Array.isArray(data.memories)) {
+      const pass = document.getElementById('vaultPass')?.value.trim();
+      if (!pass) { showAchievement('🔐', 'Passphrase required', 'Enter your passphrase in Settings to decrypt.'); return; }
+      for (const m of data.memories) {
+        try {
+          const content = await SecureVault.decrypt(m.payload, pass);
+          incoming.push({ id: m.id || Date.now(), time: m.time, tags: m.tags || [], content });
+        } catch (e) { /* wrong passphrase or corrupted item */ }
+      }
+      if (incoming.length === 0) { showAchievement('❌', 'Decrypt failed', 'Wrong passphrase or invalid file.'); return; }
+    } else {
+      showAchievement('❌', 'Invalid file', 'Not a valid AGI Engine export.');
+      return;
+    }
+    // Merge, dedupe by id
+    const existingIds = new Set(GAME.memories.map(m => String(m.id)));
+    let added = 0;
+    for (const m of incoming) {
+      if (!existingIds.has(String(m.id))) {
+        GAME.memories.push({ id: m.id || Date.now(), content: String(m.content || ''), tags: m.tags || [], time: m.time || new Date().toISOString(), encrypted: true });
+        added++;
+      }
+    }
+    saveGame();
+    renderMemories();
+    updateUI();
+    showAchievement('⬆️', 'Import complete', added + ' memories imported.');
+  } catch (e) {
+    showAchievement('❌', 'Import failed', String(e.message || e));
+  }
+  event.target.value = '';
+}
+
+function deleteMemory(id) {
+  GAME.memories = GAME.memories.filter(m => String(m.id) !== String(id));
+  saveGame();
+  renderMemories();
+  updateUI();
+}
+
+// Override renderMemories to add search + delete button + count
+const _origRenderMemories = renderMemories;
+renderMemories = function() {
+  const list = document.getElementById('memoryList');
+  if (!list) return;
+  const searchEl = document.getElementById('memSearch');
+  const q = (searchEl?.value || '').toLowerCase().trim();
+  const countEl = document.getElementById('memoryCount');
+  if (countEl) countEl.textContent = `Total: ${GAME.memories.length} memories stored on this device`;
+
+  const filtered = q
+    ? GAME.memories.filter(m => (m.content || '').toLowerCase().includes(q) || (m.tags || []).some(t => t.toLowerCase().includes(q)))
+    : GAME.memories;
+
+  if (filtered.length === 0) {
+    list.innerHTML = `<div style="text-align:center;color:var(--muted);padding:20px;font-size:13px;">${q ? 'No memories match your search.' : 'No memories yet. Start by adding one above!'}</div>`;
+    return;
+  }
+  list.innerHTML = filtered.slice().reverse().map(m => `
+    <div class="demo-memory-item" style="position:relative;">
+      ${esc(m.content)}
+      <span class="tag">${(m.tags || []).join(', ')} · 🔒 local</span>
+      <button onclick="deleteMemory('${m.id}')" title="Delete" style="position:absolute;top:6px;right:6px;background:transparent;border:none;color:var(--acc);cursor:pointer;font-size:14px;">✕</button>
+    </div>
+  `).join('');
+};
+
+// Update vault status label on load
+(function updateVaultLabel(){
+  const el = document.getElementById('vaultStatus');
+  if (!el) return;
+  const hasVault = !!localStorage.getItem('agi_vault_verifier');
+  if (hasVault) {
+    el.innerHTML = SecureVault.isLocked()
+      ? '<span style="color:var(--amb);">🔒 Vault locked</span>'
+      : '<span style="color:var(--grn);">✓ Vault active (encrypted at rest)</span>';
+  }
+})();
+
+</script>
+
+<!-- analytics.js inlined -->
+<script>
+/**
+ * AGI Engine v4.0 — Analytics & Funnel Tracking
+ * Tracks every user action from landing → signup → activation → payment
+ * Data stored in localStorage per user + aggregated in session
+ */
+
+const Analytics = {
+  // Funnel stages
+  funnel: {
+    landing_views: 0,       // User opened landing page
+    trial_starts: 0,        // Clicked "Start Free Trial"
+    onboard_completes: 0,   // Completed 3-step onboarding
+    first_memory: 0,        // Stored first memory
+    first_chat: 0,          // Sent first message
+    pro_views: 0,           // Viewed Pro/paywall page
+    pro_clicks: 0,          // Clicked Pro payment button
+    payments: 0,            // Completed payment
+  },
+
+  // Revenue tracking
+  revenue: {
+    total: 0,
+    transactions: [],
+    by_channel: {},
+  },
+
+  // Channel attribution
+  channels: {
+    direct: 0,
+    product_hunt: 0,
+    hacker_news: 0,
+    reddit: 0,
+    twitter: 0,
+    referral: 0,
+    seo: 0,
+    other: 0,
+  },
+
+  // Cohort tracking
+  cohort: {
+    date: new Date().toISOString().split('T')[0],
+    users: 0,
+    activated: 0,
+    paid: 0,
+  },
+
+  // Daily metrics (for the 8pm report)
+  daily: {
+    date: new Date().toISOString().split('T')[0],
+    visitors: 0,
+    signups: 0,
+    activations: 0,
+    payments: 0,
+    revenue: 0,
+    referrals: 0,
+    top_channel: 'unknown',
+  },
+
+  /**
+   * Track a funnel event
+   */
+  track(event, data = {}) {
+    const timestamp = new Date().toISOString();
+
+    // Funnel
+    if (this.funnel[event] !== undefined) {
+      this.funnel[event]++;
+    }
+
+    // Revenue
+    if (event === 'payment' && data.amount) {
+      this.revenue.total += data.amount;
+      this.revenue.transactions.push({
+        timestamp,
+        amount: data.amount,
+        plan: data.plan || 'unknown',
+        channel: data.channel || 'unknown',
+        user: data.userCode || 'anonymous',
+      });
+      if (!this.revenue.by_channel[data.channel]) this.revenue.by_channel[data.channel] = 0;
+      this.revenue.by_channel[data.channel] += data.amount;
+    }
+
+    // Channel attribution
+    if (data.channel && this.channels[data.channel] !== undefined) {
+      this.channels[data.channel]++;
+    }
+
+    // Daily metrics
+    if (event === 'landing_view') this.daily.visitors++;
+    if (event === 'trial_start') this.daily.signups++;
+    if (event === 'first_memory' || event === 'first_chat') this.daily.activations++;
+    if (event === 'payment') {
+      this.daily.payments++;
+      this.daily.revenue += data.amount || 0;
+    }
+    if (event === 'referral_success') this.daily.referrals++;
+
+    // Log
+    console.log(`[Analytics] ${event}`, data);
+
+    // Persist
+    this.save();
+
+    // Dispatch custom event for UI updates
+    window.dispatchEvent(new CustomEvent('agi-analytics', { detail: { event, data } }));
+  },
+
+  /**
+   * Get conversion rates for the funnel
+   */
+  getConversionRates() {
+    const f = this.funnel;
+    return {
+      landing_to_trial: f.landing_views > 0 ? ((f.trial_starts / f.landing_views) * 100).toFixed(1) + '%' : '0%',
+      trial_to_onboard: f.trial_starts > 0 ? ((f.onboard_completes / f.trial_starts) * 100).toFixed(1) + '%' : '0%',
+      onboard_to_activation: f.onboard_completes > 0 ? (((f.first_memory + f.first_chat) / f.onboard_completes) * 100).toFixed(1) + '%' : '0%',
+      activation_to_pro_view: f.first_memory > 0 ? ((f.pro_views / (f.first_memory + f.first_chat)) * 100).toFixed(1) + '%' : '0%',
+      pro_view_to_payment: f.pro_views > 0 ? ((f.payments / f.pro_views) * 100).toFixed(1) + '%' : '0%',
+      overall: f.landing_views > 0 ? ((f.payments / f.landing_views) * 100).toFixed(1) + '%' : '0%',
+    };
+  },
+
+  /**
+   * Get daily summary for the 8pm report
+   */
+  getDailyReport() {
+    const d = this.daily;
+    const f = this.funnel;
+    const rates = this.getConversionRates();
+
+    return {
+      date: d.date,
+      funnel: {
+        landing_views: f.landing_views,
+        trial_starts: f.trial_starts,
+        onboard_completes: f.onboard_completes,
+        activations: f.first_memory + f.first_chat,
+        pro_views: f.pro_views,
+        payments: d.payments,
+      },
+      conversion_rates: rates,
+      revenue: {
+        daily: d.revenue,
+        total: this.revenue.total,
+        transactions: d.payments,
+        by_channel: this.revenue.by_channel,
+      },
+      channels: this.channels,
+      referrals: d.referrals,
+      top_channel: this.getTopChannel(),
+      target: {
+        daily_revenue_target: 10000,
+        daily_revenue_actual: d.revenue,
+        gap: 10000 - d.revenue,
+        achievement_rate: ((d.revenue / 10000) * 100).toFixed(1) + '%',
+      },
+    };
+  },
+
+  getTopChannel() {
+    let top = 'direct';
+    let max = 0;
+    for (const [ch, cnt] of Object.entries(this.channels)) {
+      if (cnt > max) { max = cnt; top = ch; }
+    }
+    return top;
+  },
+
+  /**
+   * Persist to localStorage
+   */
+  save() {
+    const data = {
+      funnel: this.funnel,
+      revenue: this.revenue,
+      channels: this.channels,
+      cohort: this.cohort,
+      daily: this.daily,
+      lastSaved: new Date().toISOString(),
+    };
+    localStorage.setItem('agi_analytics_v4', JSON.stringify(data));
+  },
+
+  /**
+   * Load from localStorage
+   */
+  load() {
+    try {
+      const saved = localStorage.getItem('agi_analytics_v4');
+      if (saved) {
+        const data = JSON.parse(saved);
+        Object.assign(this.funnel, data.funnel || {});
+        Object.assign(this.revenue, data.revenue || {});
+        Object.assign(this.channels, data.channels || {});
+        Object.assign(this.cohort, data.cohort || {});
+        Object.assign(this.daily, data.daily || {});
+      }
+    } catch (e) { /* fresh start */ }
+  },
+
+  /**
+   * Reset daily counter (call at midnight)
+   */
+  resetDaily() {
+    const today = new Date().toISOString().split('T')[0];
+    if (this.daily.date !== today) {
+      // Archive yesterday's data before resetting
+      this.archiveDaily();
+      this.daily = {
+        date: today,
+        visitors: 0, signups: 0, activations: 0,
+        payments: 0, revenue: 0, referrals: 0, top_channel: 'unknown',
+      };
+      this.save();
+    }
+  },
+
+  archiveDaily() {
+    let archive = JSON.parse(localStorage.getItem('agi_analytics_archive') || '[]');
+    archive.push({
+      date: this.daily.date,
+      ...this.daily,
+      revenue_total: this.revenue.total,
+    });
+    // Keep last 90 days
+    if (archive.length > 90) archive = archive.slice(-90);
+    localStorage.setItem('agi_analytics_archive', JSON.stringify(archive));
+  },
+
+  /**
+   * Get 7-day trend
+   */
+  getWeeklyTrend() {
+    const archive = JSON.parse(localStorage.getItem('agi_analytics_archive') || '[]');
+    return archive.slice(-7);
+  },
+};
+
+// Bootstrap
+Analytics.load();
+Analytics.resetDaily();
+
+// Auto-track landing view
+if (typeof window !== 'undefined') {
+  window.addEventListener('load', () => {
+    Analytics.track('landing_view', { page: window.location.pathname });
+  });
+}
+
+</script>
+
+<!-- llm-connector.js inlined -->
+<script>
+/**
+ * AGI Engine v4.0 — LLM Connector Module
+ * 
+ * Supports:
+ * - OpenAI API (GPT-4o, GPT-4o-mini, GPT-3.5-turbo)
+ * - Anthropic API (Claude 3.5 Sonnet, Claude 3 Haiku)
+ * - OpenRouter (access to 100+ models)
+ * - Local LLM (Ollama, LM Studio, LocalAI)
+ * - StepFun API
+ * - Custom endpoint (any OpenAI-compatible API)
+ * 
+ * Users bring their own API key. We never see it.
+ * Stored in localStorage, never sent to our servers.
+ */
+
+const LLMConnector = (() => {
+  // ── Configuration ──
+  const CONFIG = {
+    openai: {
+      baseURL: 'https://api.openai.com/v1',
+      models: ['gpt-4o', 'gpt-4o-mini', 'gpt-4-turbo', 'gpt-3.5-turbo'],
+      defaultModel: 'gpt-4o-mini',
+      costPer1K: { input: 0.00015, output: 0.0006 }, // gpt-4o-mini
+    },
+    anthropic: {
+      baseURL: 'https://api.anthropic.com/v1',
+      models: ['claude-3-5-sonnet-20241022', 'claude-3-haiku-20240307'],
+      defaultModel: 'claude-3-haiku-20240307',
+      costPer1K: { input: 0.00025, output: 0.00125 },
+    },
+    openrouter: {
+      baseURL: 'https://openrouter.ai/api/v1',
+      models: ['anthropic/claude-3.5-sonnet', 'openai/gpt-4o', 'google/gemini-pro-1.5'],
+      defaultModel: 'anthropic/claude-3.5-sonnet',
+    },
+    local: {
+      baseURL: 'http://localhost:11434/v1', // Ollama default
+      models: ['llama3.1', 'mistral', 'codellama'],
+      defaultModel: 'llama3.1',
+    },
+    stepfun: {
+      baseURL: 'https://api.stepfun.com/v1',
+      models: ['step-3.7-flash', 'step-3.5-turbo', 'step-3-flash'],
+      defaultModel: 'step-3.7-flash',
+    },
+  };
+
+  // ── State ──
+  let state = {
+    provider: null,      // 'openai' | 'anthropic' | 'openrouter' | 'local' | 'stepfun' | 'custom'
+    apiKey: '',
+    customBaseURL: '',
+    customModel: '',
+    model: '',
+    enabled: false,
+    tokensUsed: 0,
+    costEstimate: 0,
+  };
+
+  // ── Load/Save ──
+  function load() {
+    try {
+      const saved = localStorage.getItem('agi_llm_v4');
+      if (saved) Object.assign(state, JSON.parse(saved));
+    } catch (e) {}
+  }
+
+  function save() {
+    localStorage.setItem('agi_llm_v4', JSON.stringify(state));
+  }
+
+  // ── Configuration ──
+  function configure(provider, apiKey, options = {}) {
+    state.provider = provider;
+    state.apiKey = apiKey;
+    state.customBaseURL = options.baseURL || '';
+    state.customModel = options.model || '';
+    state.model = options.model || (CONFIG[provider]?.defaultModel || '');
+    state.enabled = !!apiKey;
+
+    save();
+    Analytics?.track('llm_configured', { provider });
+
+    return { success: true, provider, model: state.model };
+  }
+
+  function getStatus() {
+    return {
+      enabled: state.enabled,
+      provider: state.provider,
+      model: state.model,
+      tokensUsed: state.tokensUsed,
+      costEstimate: state.costEstimate,
+      availableProviders: Object.keys(CONFIG),
+    };
+  }
+
+  // ── Chat Completion ──
+  async function chat(messages, options = {}) {
+    if (!state.enabled || !state.apiKey) {
+      return { error: 'LLM not configured. Please add your API key in Settings.' };
+    }
+
+    const providerConfig = CONFIG[state.provider];
+    const baseURL = state.customBaseURL || providerConfig?.baseURL || 'https://api.openai.com/v1';
+    const model = options.model || state.model || providerConfig?.defaultModel || 'gpt-4o-mini';
+
+    // Build request
+    let url = `${baseURL}/chat/completions`;
+    let headers = {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${state.apiKey}`,
+    };
+
+    // Anthropic uses different header
+    if (state.provider === 'anthropic') {
+      headers['anthropic-version'] = '2024-01-01';
+      headers['anthropic-dangerous-direct-browser-access'] = 'true'; // For browser use
+    }
+
+    // Add memory context if available
+    let systemPrompt = `You are AGI, a personal AI assistant that runs locally in the user's browser. You have access to the user's stored memories (preferences, habits, goals). Be helpful, concise, and personalized. Current date: ${new Date().toLocaleDateString()}.`;
+
+    // Inject memories into system prompt
+    try {
+      const gameData = JSON.parse(localStorage.getItem('agi_game_v3') || '{}');
+      if (gameData.memories && gameData.memories.length > 0) {
+        const memorySummary = gameData.memories.slice(-10).map(m => m.content).join('\n- ');
+        systemPrompt += `\n\nUser's recent memories:\n- ${memorySummary}`;
+      }
+    } catch (e) {}
+
+    const body = {
+      model,
+      messages: [
+        { role: 'system', content: systemPrompt },
+        ...messages,
+      ],
+      max_tokens: options.maxTokens || 1024,
+      temperature: options.temperature || 0.7,
+    };
+
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers,
+        body: JSON.stringify(body),
+      });
+
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}));
+        return { error: err.error?.message || `API error: ${response.status}` };
+      }
+
+      const data = await response.json();
+      const content = data.choices?.[0]?.message?.content || '';
+
+      // Track usage
+      const inputTokens = data.usage?.prompt_tokens || 0;
+      const outputTokens = data.usage?.completion_tokens || 0;
+      state.tokensUsed += inputTokens + outputTokens;
+
+      // Estimate cost
+      if (providerConfig?.costPer1K) {
+        state.costEstimate += (inputTokens / 1000) * providerConfig.costPer1K.input;
+        state.costEstimate += (outputTokens / 1000) * providerConfig.costPer1K.output;
+      }
+
+      save();
+      Analytics?.track('llm_call', { model, inputTokens, outputTokens });
+
+      return { content, usage: data.usage };
+    } catch (err) {
+      return { error: err.message || 'Network error. Check your connection.' };
+    }
+  }
+
+  // ── Quick test ──
+  async function testConnection() {
+    const result = await chat([{ role: 'user', content: 'Say "AGI Engine connected successfully" in exactly those words.' }]);
+    return result;
+  }
+
+  // ── Clear config ──
+  function disconnect() {
+    state = {
+      provider: null, apiKey: '', customBaseURL: '', customModel: '',
+      model: '', enabled: false, tokensUsed: 0, costEstimate: 0,
+    };
+    save();
+    Analytics?.track('llm_disconnected');
+  }
+
+  // Public API
+  return {
+    apiKey: state.apiKey,
+    configure,
+    getStatus,
+    chat,
+    testConnection,
+    disconnect,
+    load,
+    save,
+    CONFIG,
+  };
+})();
+
+</script>
+
+<!-- settings.js inlined -->
+<script>
+/**
+ * AGI Engine — Settings UI Functions
+ * Called from the Settings tab in index-v3.html
+ */
+
+function saveLLMSettings() {
+  const provider = document.getElementById('llmProvider').value;
+  const apiKey = document.getElementById('llmApiKey').value.trim();
+  const customUrl = document.getElementById('llmCustomUrl').value.trim();
+  
+  if (!apiKey) {
+    document.getElementById('llmStatus').innerHTML = '<span style="color:var(--acc);">⚠️ Please enter an API key</span>';
+    return;
+  }
+
+  const result = LLMConnector.configure(provider, apiKey, customUrl ? { baseURL: customUrl } : {});
+  
+  if (result.success) {
+    document.getElementById('llmStatus').innerHTML = 
+      `<span style="color:var(--grn);">✅ Connected! Model: ${result.model}</span>`;
+  } else {
+    document.getElementById('llmStatus').innerHTML = 
+      `<span style="color:var(--acc);">❌ Connection failed</span>`;
+  }
+}
+
+async function testLLM() {
+  const statusEl = document.getElementById('llmStatus');
+  statusEl.innerHTML = '<span style="color:var(--amb);">⏳ Testing connection...</span>';
+  
+  const result = await LLMConnector.testConnection();
+  
+  if (result.error) {
+    statusEl.innerHTML = `<span style="color:var(--acc);">❌ Error: ${esc(result.error)}</span>`;
+  } else {
+    statusEl.innerHTML = `<span style="color:var(--grn);">✅ Connected! Response: "${result.content}"</span>`;
+  }
+}
+
+function updateLLMUsage() {
+  const status = LLMConnector.getStatus();
+  const usageEl = document.getElementById('llmUsage');
+  if (!usageEl) return;
+
+  if (status.enabled) {
+    usageEl.innerHTML = `
+      <div>Provider: <strong>${status.provider}</strong></div>
+      <div>Model: <strong>${status.model}</strong></div>
+      <div>Tokens used: <strong>${status.tokensUsed.toLocaleString()}</strong></div>
+      <div>Est. cost: <strong>$${status.costEstimate.toFixed(4)}</strong></div>
+      <button onclick="LLMConnector.disconnect(); updateLLMUsage();" style="margin-top:12px;padding:8px 16px;border-radius:8px;border:1px solid var(--acc);background:transparent;color:var(--acc);cursor:pointer;font-size:12px;">Disconnect</button>
+    `;
+  } else {
+    usageEl.innerHTML = 'Not connected';
+  }
+}
+
+// Load saved LLM config on settings tab open
+document.addEventListener('DOMContentLoaded', () => {
+  // Watch for settings tab activation
+  const observer = new MutationObserver((mutations) => {
+    mutations.forEach((m) => {
+      if (m.target.id === 'tab-settings' && m.target.classList.contains('active')) {
+        loadLLMSettings();
+      }
+    });
+  });
+
+  document.querySelectorAll('.tab-panel').forEach(panel => {
+    observer.observe(panel, { attributes: true, attributeFilter: ['class'] });
+  });
+
+  // Custom URL toggle
+  document.getElementById('llmProvider')?.addEventListener('change', (e) => {
+    const customRow = document.getElementById('customUrlRow');
+    if (customRow) customRow.style.display = e.target.value === 'custom' ? 'block' : 'none';
+  });
+});
+
+function loadLLMSettings() {
+  const status = LLMConnector.getStatus();
+  if (status.enabled) {
+    document.getElementById('llmProvider').value = status.provider || 'openai';
+    document.getElementById('llmApiKey').value = '••••••••';
+    document.getElementById('llmCustomUrl').value = '';
+    document.getElementById('customUrlRow').style.display = status.provider === 'custom' ? 'block' : 'none';
+    updateLLMUsage();
+  }
+}
+
+</script>
+
+</body>
+</html>

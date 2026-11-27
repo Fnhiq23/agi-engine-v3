@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AGI Engine — 真实数据看板</title>
+<style>
+:root{--bg:#06060C;--surface:#0D0D16;--border:#222233;--text:#E8E8F0;--muted:#7070A0;--pri:#00D4FF;--grn:#00FF9D;--amb:#FFB800;--red:#FF3366}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;padding:24px;line-height:1.5}
+.wrap{max-width:1200px;margin:0 auto}
+h1{font-size:22px;margin-bottom:4px}
+.sub{color:var(--muted);font-size:13px;margin-bottom:24px}
+.badge{display:inline-block;padding:4px 10px;border-radius:12px;background:rgba(0,255,157,.1);color:var(--grn);font-size:11px;margin-left:8px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:14px;margin-bottom:24px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px}
+.label{font-size:12px;color:var(--muted);margin-bottom:8px}
+.value{font-size:30px;font-weight:700;color:var(--pri)}
+.value.grn{color:var(--grn)}.value.amb{color:var(--amb)}
+.section{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:20px}
+.section h2{font-size:15px;margin-bottom:16px;color:var(--text)}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{text-align:left;padding:9px 8px;border-bottom:1px solid var(--border)}
+th{color:var(--muted);font-weight:500}
+.bar{height:8px;background:var(--border);border-radius:4px;overflow:hidden;margin-top:6px}
+.bar>div{height:100%;background:linear-gradient(90deg,var(--pri),var(--grn));border-radius:4px}
+.funnel-row{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+.funnel-name{width:120px;font-size:13px;color:var(--muted)}
+.funnel-bar{flex:1;height:22px;background:var(--border);border-radius:5px;overflow:hidden;position:relative}
+.funnel-bar>div{height:100%;background:linear-gradient(90deg,#00D4FF,#A855F7);display:flex;align-items:center;justify-content:flex-end;padding-right:8px;font-size:11px;color:#fff;font-weight:600}
+.spark{display:flex;align-items:flex-end;gap:6px;height:120px;margin-top:10px}
+.spark .col{flex:1;background:linear-gradient(180deg,var(--pri),rgba(0,212,255,.15));border-radius:3px 3px 0 0;min-height:2px;position:relative}
+.spark .col span{position:absolute;bottom:-18px;left:0;right:0;text-align:center;font-size:10px;color:var(--muted)}
+.note{font-size:11px;color:var(--muted);margin-top:12px;line-height:1.7}
+.empty{color:var(--muted);text-align:center;padding:24px;font-size:13px}
+button{background:var(--surface);border:1px solid var(--border);color:var(--text);padding:8px 14px;border-radius:8px;cursor:pointer;font-size:12px}
+button:hover{border-color:var(--pri)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>AGI Engine — 真实数据看板 <span class="badge" id="srcBadge">SERVER-VERIFIED</span></h1>
+  <div class="sub">所有数字来自服务端验证的数据源，不是浏览器本地伪造。最后更新：<span id="upd">—</span></div>
+
+  <div class="grid" id="kpi"></div>
+
+  <div class="section">
+    <h2>今日转化漏斗</h2>
+    <div id="funnel"></div>
+    <div class="note" id="conv"></div>
+  </div>
+
+  <div class="section">
+    <h2>近 7 天趋势</h2>
+    <div id="week"></div>
+  </div>
+
+  <div class="section">
+    <h2>流量渠道</h2>
+    <div id="channels"></div>
+  </div>
+
+  <div class="section">
+    <h2>数据完整性（可验证性）</h2>
+    <div id="integrity"></div>
+    <div class="note">数据来源：服务端事件埋点 + PayPal Webhook 签名验证。只有签名验证通过的付款才计入收入。未验证的付款请求会被拒绝，不会激活订阅。</div>
+  </div>
+
+  <p style="margin-top:20px"><button onclick="location.reload()">刷新数据</button></p>
+</div>
+
+<script>
+const fmt = n => Number(n||0).toLocaleString();
+async function load(){
+  try{
+    const r = await fetch('/api/report');
+    const d = await r.json();
+    document.getElementById('upd').textContent = new Date(d.generatedAt).toLocaleString('zh-CN');
+    document.getElementById('srcBadge').textContent = d.source.toUpperCase();
+
+    // KPI
+    const t = d.today;
+    document.getElementById('kpi').innerHTML = `
+      <div class="card"><div class="label">今日访客</div><div class="value">${fmt(t.visitors)}</div></div>
+      <div class="card"><div class="label">今日试用</div><div class="value">${fmt(t.signups)}</div></div>
+      <div class="card"><div class="label">今日激活</div><div class="value">${fmt(t.activations)}</div></div>
+      <div class="card"><div class="label">今日付款</div><div class="value grn">${fmt(t.payments)}</div></div>
+      <div class="card"><div class="label">今日收入 (USD)</div><div class="value grn">$${fmt(t.revenue)}</div></div>
+      <div class="card"><div class="label">活跃订阅</div><div class="value amb">${fmt(d.subscriptions.active)}</div></div>`;
+
+    // Funnel
+    const f = d.funnel;
+    const stages = [
+      ['落地页浏览', f.landing_view||0],
+      ['开始试用', f.trial_start||0],
+      ['首次激活', (f.first_memory||0)+(f.first_chat||0)],
+      ['查看 Pro', f.pro_view||0],
+      ['点击付款', f.pro_click||0],
+      ['完成付款', d.revenue.transactions],
+    ];
+    const max = Math.max(...stages.map(s=>s[1]),1);
+    document.getElementById('funnel').innerHTML = stages.map(([n,v])=>`
+      <div class="funnel-row">
+        <div class="funnel-name">${n}</div>
+        <div class="funnel-bar"><div style="width:${Math.max(v/max*100,2)}%">${v}</div></div>
+      </div>`).join('');
+    document.getElementById('conv').innerHTML = `转化率：落地→试用 <b style="color:var(--pri)">${d.conversion.landingToSignup}</b> · 试用→激活 <b style="color:var(--pri)">${d.conversion.signupToActivation}</b> · Pro浏览→付款 <b style="color:var(--pri)">${d.conversion.proViewToPayment}</b>`;
+
+    // Weekly sparkline
+    if(d.weekly.length){
+      const w = d.weekly;
+      const mx = Math.max(...w.map(x=>x.visitors||0),1);
+      document.getElementById('week').innerHTML = `<div class="spark">${w.map(x=>`
+        <div class="col" style="height:${Math.max((x.visitors||0)/mx*100,2)}%" title="${x.date}: ${x.visitors||0} 访客, $${x.revenue||0} 收入"><span>${x.date.slice(5)}</span></div>`).join('')}</div>`;
+    } else {
+      document.getElementById('week').innerHTML = '<div class="empty">暂无历史数据</div>';
+    }
+
+    // Channels
+    const ch = Object.entries(d.channels).sort((a,b)=>b[1]-a[1]);
+    if(ch.length){
+      const mx = Math.max(...ch.map(x=>x[1]),1);
+      document.getElementById('channels').innerHTML = ch.map(([n,v])=>`
+        <div style="margin-bottom:10px"><div style="font-size:13px">${n} — ${v}</div><div class="bar"><div style="width:${v/mx*100}%"></div></div></div>`).join('');
+    } else {
+      document.getElementById('channels').innerHTML = '<div class="empty">暂无渠道数据</div>';
+    }
+
+    // Integrity
+    const i = d.dataIntegrity;
+    document.getElementById('integrity').innerHTML = `
+      <table>
+        <tr><th>埋点事件总数</th><td>${fmt(i.events)}</td></tr>
+        <tr><th>已验证付款</th><td>${fmt(i.verifiedPayments)}</td></tr>
+        <tr><th>Webhook 调用记录</th><td>${fmt(i.webhookCalls)}</td></tr>
+        <tr><th>数据源</th><td>${d.source}</td></tr>
+      </table>`;
+  }catch(e){
+    document.querySelector('.wrap').insertAdjacentHTML('afterbegin', `<div class="section" style="border-color:var(--red)">加载失败：${e.message}</div>`);
+  }
+}
+load();
+setInterval(load, 30000);
+</script>
+</body>
+</html>

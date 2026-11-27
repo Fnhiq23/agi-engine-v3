@@ -1,0 +1,13 @@
+# Dependencies
+node_modules/
+# Runtime data
+server/data/*.json
+server/data/*.tmp
+# Secrets — NEVER commit
+server/.env
+*.pem
+# Logs
+*.log
+# OS
+.DS_Store
+Thumbs.db
