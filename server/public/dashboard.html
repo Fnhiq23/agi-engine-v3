@@ -80,7 +80,11 @@ async function load(){
 
     // KPI
     const t = d.today;
+    const s = d.site || {};
     document.getElementById('kpi').innerHTML = `
+      <div class="card" style="border-color:var(--pri)"><div class="label">★ 北极星 · 周活跃付费订阅</div><div class="value amb">${fmt((d.northStar||{}).value||0)}</div></div>
+      <div class="card"><div class="label">官网浏览 (累计)</div><div class="value">${fmt(s.views||0)}</div></div>
+      <div class="card"><div class="label">官网→应用点击</div><div class="value">${fmt(s.toAppClicks||0)}</div></div>
       <div class="card"><div class="label">今日访客</div><div class="value">${fmt(t.visitors)}</div></div>
       <div class="card"><div class="label">今日试用</div><div class="value">${fmt(t.signups)}</div></div>
       <div class="card"><div class="label">今日激活</div><div class="value">${fmt(t.activations)}</div></div>

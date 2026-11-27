@@ -16,8 +16,13 @@
 | DEL-009 | DEL-009-信任页面信息架构.md | — | 590 | 信任基础设施落地官 | 已交付·代码落地 |
 | DEL-010 | DEL-010-真实变现能力审计与KPI.md | — | 343 | KPI与真实变现审计官 | 已交付·看板落地 |
 | DEL-011 | DEL-011-创始人第二轮执行总结.md | — | — | 创始人 | 已签发 |
+| DEL-012 | DEL-012-GitHub标杆项目情报.md | — | 439 | GitHub标杆情报官 | 已交付·洞察落地 |
+| DEL-013 | DEL-013-高转化官网设计蓝图.md | — | 468 | 转化心理架构师 | 已交付·官网落地 |
+| DEL-014 | DEL-014-全球免费流量作战地图.md | — | 468 | 全球免费流量作战官 | 已交付 |
+| DEL-015 | DEL-015-官网KPI与数据体系.md | — | 580 | 官网KPI数据官 | 已交付·埋点落地 |
+| DEL-016 | DEL-016-第三轮官网落地总纲.md | — | — | 创始人 | 已签发 |
 
-**合计**：10 位专员 + 2 份创始人总纲/总结，12 份产物。
+**合计**：14 位专员 + 3 份创始人总纲/总结，16 份产物。
 
 ## 编码规则
 - `DEL-NNN`：Deliverable（交付物）三位序号。
@@ -32,6 +37,15 @@
 - DEL-008 → `server/server.js`（分润归因 P0：parseCustomId / recordCommission / referral APIs / claim 兜底归因）、`index.html`（refCode 透传）、`server/public/claim.html`（兜底归因）
 - DEL-009 → 4 个公开信任页 + 付费墙政策链接 + README 导航
 - DEL-010 → `server/server.js` 的 `/api/report`（northStar WAPS + referral 段）
+- DEL-012 → 官网四个可验证信任信号（开源可审计/标准算法/公开政策/PayPal）
+- DEL-013 → 根 `index.html` 官网（Hero 损失厌恶、数据流向图、定价锚定、风险逆转、FAQ、双语）
+- DEL-014 → 免费流量作战弹药（供创始人本人发布）
+- DEL-015 → 官网埋点（surface=site）、`/api/event` 扩展、`/api/report` 的 site 段、dashboard KPI 卡片；修复 `agi_ref_by` bug
+
+## 第三轮入口结构
+- 根 `index.html` = 官网（营销首页，转化容器）
+- `app.html` = 应用本体（原 index.html，功能不变）
+- 后端 `/` = 官网、`/app` = 应用、`/dashboard` = 数据看板
 
 ## 分层开源边界（第二轮决策）
 - **完全公开**：`index.html`、4 个信任页、信任/SEO/KPI 文档、LICENSE/NOTICE/CONTRIBUTING/AFFILIATE

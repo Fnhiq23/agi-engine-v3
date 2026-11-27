@@ -369,6 +369,22 @@ function buildReport() {
       value: activeSubs.length,
       note: 'active subscriptions with verified payment; see revenue.transactions',
     },
+    site: (function () {
+      const se = db.events.filter(e => e.surface === 'site' || ['site_view','hero_cta_view','hero_cta_click','pricing_view','faq_expand','policy_link_click','outbound_paypal_click','site_to_app_click'].includes(e.type));
+      const count = t => se.filter(e => e.type === t).length;
+      const uniq = t => new Set(se.filter(e => e.type === t).map(e => e.clientId)).size;
+      return {
+        views: count('site_view'),
+        heroCtaViews: count('hero_cta_view'),
+        heroCtaClicks: count('hero_cta_click'),
+        pricingViews: count('pricing_view'),
+        faqExpands: count('faq_expand'),
+        paypalClicks: count('outbound_paypal_click'),
+        toAppClicks: count('site_to_app_click'),
+        uniqueVisitors: uniq('site_view'),
+        byChannel: se.reduce((a, e) => { const c = e.channel || 'direct'; a[c] = (a[c] || 0) + 1; return a; }, {}),
+      };
+    })(),
     dataIntegrity: { events: db.events.length, verifiedPayments: db.payments.length, webhookCalls: db.webhookLog.length },
   };
 }
@@ -409,14 +425,26 @@ const server = http.createServer(async (req, res) => {
 
     if (p === '/api/event' && req.method === 'POST') {
       const b = await readBody(req);
-      const allowed = ['landing_view', 'trial_start', 'onboard_complete', 'first_memory', 'first_chat', 'pro_view', 'pro_click', 'referral', 'referral_click', 'referral_signup', 'referral_qualified'];
+      const appEvents = ['landing_view', 'trial_start', 'onboard_complete', 'first_memory', 'first_chat', 'pro_view', 'pro_click', 'referral', 'referral_click', 'referral_signup', 'referral_qualified', 'app_landing_view'];
+      const siteEvents = ['site_view', 'hero_cta_view', 'hero_cta_click', 'pricing_view', 'faq_expand', 'policy_link_click', 'outbound_paypal_click', 'site_to_app_click'];
+      const allowed = appEvents.concat(siteEvents);
       if (!allowed.includes(b.type)) return json(res, 400, { error: 'unknown event type' });
+      const surface = siteEvents.includes(b.type) ? 'site' : (b.surface === 'site' ? 'site' : 'app');
+      // Sanitize event data: string values capped, shallow keys only. Never store memory content.
+      const cleanData = {};
+      if (b.data && typeof b.data === 'object') {
+        for (const k of Object.keys(b.data).slice(0, 16)) {
+          const v = b.data[k];
+          cleanData[String(k).slice(0, 32)] = (typeof v === 'string' || typeof v === 'number' || typeof v === 'boolean') ? String(v).slice(0, 64) : '';
+        }
+      }
       db.events.push({
         ts: new Date().toISOString(),
         type: b.type,
+        surface,
         clientId: String(b.clientId || 'anon').slice(0, 64),
         channel: String(b.channel || 'direct').slice(0, 32),
-        data: b.data || {},
+        data: cleanData,
       });
       prune(); saveDB();
       return json(res, 200, { ok: true });
@@ -740,8 +768,12 @@ const server = http.createServer(async (req, res) => {
 
     // Static pages
     const staticPages = {
-      '/': 'dashboard.html',
-      '/dashboard': 'dashboard.html',
+      '/': 'index.html',          // marketing website is the public entry
+      '/home': 'index.html',
+      '/index.html': 'index.html',
+      '/app': 'app.html',
+      '/app.html': 'app.html',
+      '/dashboard': 'dashboard.html',   // admin analytics (sharecode-protected at edge)
       '/claim': 'claim.html',
       '/reconcile': 'reconcile.html',
       '/privacy': 'privacy.html',
@@ -752,11 +784,15 @@ const server = http.createServer(async (req, res) => {
       '/refund.html': 'refund.html',
       '/faq': 'faq.html',
       '/faq.html': 'faq.html',
+      '/CONTRIBUTING.md': 'CONTRIBUTING.md',
+      '/AFFILIATE.md': 'AFFILIATE.md',
+      '/LICENSE': 'LICENSE',
     };
     if (staticPages[p]) {
       const file = path.join(PUBLIC_DIR, staticPages[p]);
       if (fs.existsSync(file)) {
-        res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
+        const isMd = /\.md$/i.test(staticPages[p]);
+        res.writeHead(200, { 'Content-Type': (isMd ? 'text/markdown' : 'text/html') + '; charset=utf-8' });
         return res.end(fs.readFileSync(file));
       }
     }

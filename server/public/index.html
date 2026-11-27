@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AGI Engine — 别把你的记忆交给别人的云端</title>
+<meta name="description" content="浏览器本地运行的个人 AI 助手。记忆用 AES-256-GCM 本地加密，钥匙只在你手里，数据永不上传。自带 API Key，14 种语言，随时完整导出。">
+<link rel="canonical" href="https://fnhiq23.github.io/agi-engine-v3/">
+<meta property="og:title" content="AGI Engine — Your AI. Your key. Your data.">
+<meta property="og:description" content="A personal AI that runs in your browser. Local encryption, keys you hold, zero uploads.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://fnhiq23.github.io/agi-engine-v3/">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🔐</text></svg>">
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"SoftwareApplication","name":"AGI Engine","applicationCategory":"ProductivityApplication","operatingSystem":"Web browser","description":"Privacy-first, local-first personal AI assistant. Bring your own LLM API key. Local AES-256-GCM encrypted memory.","offers":[{"@type":"Offer","name":"Pro Annual","price":"100","priceCurrency":"USD"},{"@type":"Offer","name":"Pro Monthly","price":"15","priceCurrency":"USD"}]}
+</script>
+<style>
+:root{--bg:#0a0d12;--bg2:#0f141b;--card:#141b24;--line:#222e3b;--fg:#e8eef4;--muted:#8b9bab;--acc:#00e5a0;--acc2:#38bdf8;--amb:#ffb84d;--red:#ff6b6b;--grad:linear-gradient(135deg,#00e5a0,#38bdf8)}
+*{box-sizing:border-box;margin:0;padding:0}html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--fg);font:16px/1.7 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"PingFang SC","Microsoft YaHei",sans-serif;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+a{color:inherit;text-decoration:none}.wrap{max-width:1120px;margin:0 auto;padding:0 24px}
+.glow{position:fixed;border-radius:50%;filter:blur(120px);opacity:.16;pointer-events:none;z-index:0}
+.glow.a{width:520px;height:520px;background:#00e5a0;top:-180px;left:-120px}.glow.b{width:480px;height:480px;background:#38bdf8;top:120px;right:-160px}
+.content{position:relative;z-index:1}
+nav{position:sticky;top:0;z-index:50;background:rgba(10,13,18,.82);backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
+nav .wrap{display:flex;align-items:center;justify-content:space-between;height:64px}
+.logo{display:flex;align-items:center;gap:10px;font-weight:800;font-size:18px;letter-spacing:-.4px}.logo .mark{width:30px;height:30px;border-radius:9px;background:var(--grad);display:grid;place-items:center;font-size:16px}
+.nav-links{display:flex;gap:26px;align-items:center;font-size:14px;color:var(--muted)}.nav-links a:hover{color:var(--fg)}.nav-cta{display:flex;gap:10px;align-items:center}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:13px 22px;border-radius:12px;font-weight:700;font-size:15px;border:1px solid transparent;cursor:pointer;transition:.2s;white-space:nowrap}
+.btn-primary{background:var(--grad);color:#04120d;box-shadow:0 6px 24px rgba(0,229,160,.22)}.btn-primary:hover{transform:translateY(-2px);box-shadow:0 10px 32px rgba(0,229,160,.34)}
+.btn-ghost{background:transparent;border-color:var(--line);color:var(--fg)}.btn-ghost:hover{border-color:var(--acc);color:var(--acc)}
+.btn-sm{padding:9px 16px;font-size:13px;border-radius:10px}
+.lang-wrap{position:relative}.lang-btn{background:transparent;border:1px solid var(--line);border-radius:9px;padding:7px 11px;color:var(--muted);font-size:13px;cursor:pointer}
+.lang-menu{position:absolute;top:42px;right:0;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:6px;display:none;grid-template-columns:1fr 1fr;gap:2px;min-width:230px;box-shadow:0 18px 50px rgba(0,0,0,.5)}
+.lang-menu.open{display:grid}.lang-menu button{background:transparent;border:0;color:var(--muted);padding:8px 10px;text-align:left;border-radius:7px;cursor:pointer;font-size:13px}
+.lang-menu button:hover,.lang-menu button.active{background:rgba(0,229,160,.1);color:var(--acc)}
+header{padding:76px 0 40px;text-align:center}
+.badge-top{display:inline-flex;align-items:center;gap:8px;background:rgba(0,229,160,.08);border:1px solid rgba(0,229,160,.25);color:var(--acc);padding:7px 14px;border-radius:100px;font-size:13px;font-weight:600;margin-bottom:26px}
+.badge-top .dot{width:7px;height:7px;border-radius:50%;background:var(--acc);box-shadow:0 0 10px var(--acc)}
+h1{font-size:clamp(34px,6.2vw,62px);line-height:1.12;letter-spacing:-2px;font-weight:850;max-width:900px;margin:0 auto}h1 .hl{color:var(--amb)}
+.sub{font-size:clamp(15px,2.3vw,19px);color:var(--muted);max-width:720px;margin:22px auto 0;line-height:1.7}
+.hero-cta{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin:34px 0 20px}.hero-note{font-size:12.5px;color:var(--muted)}.hero-note span{color:var(--acc)}
+.flow{margin:56px auto 0;max-width:860px;background:var(--card);border:1px solid var(--line);border-radius:20px;padding:28px 24px;text-align:left}
+.flow-title{font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:1.4px;margin-bottom:20px;text-align:center}
+.flow-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:center}
+.flow-node{background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:14px 18px;min-width:150px;text-align:center}
+.flow-node .ic{font-size:22px}.flow-node .t{font-size:13px;font-weight:700;margin-top:6px}.flow-node .s{font-size:11px;color:var(--muted);margin-top:2px}
+.flow-node.mine{border-color:rgba(0,229,160,.4)}.flow-node.mine .t{color:var(--acc)}.flow-arrow{color:var(--muted);font-size:20px}.flow-x{color:var(--red)!important;font-size:12px;font-weight:700;margin-top:6px}
+.trust-strip{border-top:1px solid var(--line);border-bottom:1px solid var(--line);background:var(--bg2);margin-top:24px}
+.trust-strip .wrap{display:flex;justify-content:center;gap:clamp(20px,5vw,64px);flex-wrap:wrap;padding:24px}.stat{text-align:center}.stat .n{font-size:22px;font-weight:850;color:var(--acc);letter-spacing:-.5px}.stat .l{font-size:12px;color:var(--muted);margin-top:2px}
+section{padding:82px 0}.eyebrow{color:var(--acc);font-size:13px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;text-align:center;margin-bottom:14px}
+h2{font-size:clamp(28px,4.5vw,42px);letter-spacing:-1.2px;text-align:center;font-weight:820;line-height:1.2}.sec-sub{color:var(--muted);text-align:center;max-width:640px;margin:16px auto 0;font-size:16px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:18px;margin-top:44px}.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:26px;transition:.2s}
+.card:hover{border-color:rgba(0,229,160,.35);transform:translateY(-3px)}.card .ic{font-size:26px;margin-bottom:14px}.card h3{font-size:18px;margin-bottom:8px}.card p{color:var(--muted);font-size:14px;line-height:1.7}
+.steps{counter-reset:s;display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:20px;margin-top:44px}.step{position:relative;padding:24px;background:var(--card);border:1px solid var(--line);border-radius:16px}
+.step:before{counter-increment:s;content:counter(s);position:absolute;top:-14px;left:20px;background:var(--grad);color:#04120d;font-weight:850;font-size:14px;width:30px;height:30px;border-radius:9px;display:grid;place-items:center}
+.step h3{font-size:16px;margin:8px 0 6px}.step p{font-size:13.5px;color:var(--muted)}
+.pricing-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px;max-width:820px;margin:48px auto 0;align-items:stretch}.price-card{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:30px;position:relative}
+.price-card.featured{border-color:var(--acc);box-shadow:0 0 0 1px rgba(0,229,160,.2),0 20px 60px rgba(0,229,160,.08)}
+.price-tag{position:absolute;top:-13px;left:50%;transform:translateX(-50%);background:var(--grad);color:#04120d;font-size:12px;font-weight:800;padding:5px 14px;border-radius:100px}
+.price-name{font-size:15px;color:var(--muted);font-weight:600}.price-amount{font-size:46px;font-weight:850;letter-spacing:-2px;margin:12px 0 2px}.price-amount small{font-size:16px;color:var(--muted);font-weight:500;letter-spacing:0}
+.price-anchor{font-size:13px;color:var(--muted);text-decoration:line-through}.price-save{display:inline-block;background:rgba(0,229,160,.12);color:var(--acc);font-size:12px;font-weight:700;padding:4px 10px;border-radius:100px;margin:8px 0 18px}
+.price-feats{list-style:none;margin:18px 0 24px}.price-feats li{padding:7px 0;font-size:14px;color:var(--fg);border-bottom:1px solid rgba(255,255,255,.04)}.price-feats li:before{content:'✓';color:var(--acc);font-weight:800;margin-right:10px}
+.price-card .btn{width:100%}.pricing-foot{text-align:center;margin-top:26px;font-size:13px;color:var(--muted)}.pricing-foot a{color:var(--acc);text-decoration:underline}
+.risk-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin-top:44px}.risk{text-align:center;padding:22px;background:rgba(0,229,160,.04);border:1px solid rgba(0,229,160,.14);border-radius:16px}
+.risk .ic{font-size:24px;margin-bottom:10px}.risk h4{font-size:15px;margin-bottom:5px}.risk p{font-size:12.5px;color:var(--muted)}
+.proof{background:var(--bg2);border-top:1px solid var(--line);border-bottom:1px solid var(--line)}.proof-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:18px;margin-top:40px}
+.proof-item{padding:22px;border:1px solid var(--line);border-radius:16px;background:var(--card)}.proof-item .ic{font-size:22px;margin-bottom:10px}.proof-item h4{font-size:15px;margin-bottom:6px}.proof-item p{font-size:13px;color:var(--muted)}.proof-item a{color:var(--acc);text-decoration:underline;font-size:12px}
+.faq-list{max-width:780px;margin:44px auto 0}.faq-item{border:1px solid var(--line);border-radius:14px;margin-bottom:12px;background:var(--card);overflow:hidden}
+.faq-q{padding:18px 22px;cursor:pointer;font-weight:650;font-size:15px;display:flex;justify-content:space-between;align-items:center;gap:12px}.faq-q:after{content:'+';color:var(--acc);font-size:20px;font-weight:400;transition:.2s}.faq-item.open .faq-q:after{transform:rotate(45deg)}
+.faq-a{display:none;padding:0 22px 20px;color:var(--muted);font-size:14px;line-height:1.75}.faq-item.open .faq-a{display:block}.faq-a a{color:var(--acc);text-decoration:underline}
+.devband{background:linear-gradient(135deg,rgba(0,229,160,.08),rgba(56,189,248,.06));border:1px solid rgba(0,229,160,.2);border-radius:22px;padding:40px;margin-top:20px;text-align:center}
+.devband h3{font-size:24px;margin-bottom:12px}.devband p{color:var(--muted);max-width:620px;margin:0 auto 22px;font-size:15px}.devband .row{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+.final{text-align:center;padding:96px 0}.final h2{font-size:clamp(30px,5vw,48px)}.final .sub{margin:18px auto 30px}
+footer{border-top:1px solid var(--line);padding:46px 0 34px;color:var(--muted);font-size:13px}.foot-grid{display:flex;justify-content:space-between;flex-wrap:wrap;gap:30px}
+.foot-brand{max-width:320px}.foot-brand .logo{margin-bottom:10px;color:var(--fg)}.foot-col h5{color:var(--fg);font-size:13px;margin-bottom:12px;text-transform:uppercase;letter-spacing:1px}
+.foot-col a{display:block;padding:4px 0;color:var(--muted)}.foot-col a:hover{color:var(--acc)}.foot-bottom{border-top:1px solid var(--line);margin-top:34px;padding-top:20px;text-align:center;font-size:12px}
+@media(max-width:760px){.nav-links{display:none}header{padding:52px 0 30px}section{padding:60px 0}.flow-row{gap:8px}.flow-arrow{transform:rotate(90deg)}.trust-strip .wrap{gap:24px}}
+</style>
+</head>
+<body>
+<div class="glow a"></div><div class="glow b"></div>
+<nav><div class="wrap">
+  <a href="#top" class="logo"><span class="mark">🔐</span> AGI Engine</a>
+  <div class="nav-links"><a href="#how" data-i18n="nav_how">如何工作</a><a href="#features" data-i18n="nav_features">功能</a><a href="#pricing" data-i18n="nav_pricing">定价</a><a href="#faq" data-i18n="nav_faq">FAQ</a><a href="#developers" data-i18n="nav_dev">开发者</a></div>
+  <div class="nav-cta"><div class="lang-wrap"><button class="lang-btn" onclick="toggleLang()">🌐 <span id="langCur">简体中文</span></button><div class="lang-menu" id="langMenu"></div></div><a href="app.html" class="btn btn-primary btn-sm" data-cta="nav" data-i18n="cta_free">免费开始</a></div>
+</div></nav>
+<div class="content" id="top">
+<header><div class="wrap">
+  <div class="badge-top"><span class="dot"></span><span data-i18n="badge_top">开源 · 本地优先 · 零数据上传</span></div>
+  <h1 data-i18n="hero_h1">别把你的记忆，<span class="hl">交给别人的云端。</span></h1>
+  <p class="sub" data-i18n="hero_sub">每一条笔记、每一次对话，本该留在你自己的设备里。AGI Engine 本地加密存储，钥匙自持，随时完整导出——一次买断，年费不到大厂一半。</p>
+  <div class="hero-cta"><a href="app.html" class="btn btn-primary" data-cta="hero-free" data-i18n="hero_cta1">把记忆留在本地 · 免费开始</a><a href="#pricing" class="btn btn-ghost" data-cta="hero-pricing" data-i18n="hero_cta2">了解定价</a></div>
+  <div class="hero-note" data-i18n="hero_note">无需信用卡 · <span>随时取消</span> · 数据随时完整导出</div>
+  <div class="flow"><div class="flow-title" data-i18n="flow_title">你的数据，只走这条路径</div><div class="flow-row">
+    <div class="flow-node mine"><div class="ic">💻</div><div class="t" data-i18n="flow_n1">你的浏览器</div><div class="s" data-i18n="flow_n1s">本地运行</div></div><div class="flow-arrow">→</div>
+    <div class="flow-node mine"><div class="ic">🔐</div><div class="t" data-i18n="flow_n2">AES-256 加密</div><div class="s" data-i18n="flow_n2s">钥匙只有你知道</div></div><div class="flow-arrow">→</div>
+    <div class="flow-node mine"><div class="ic">💾</div><div class="t" data-i18n="flow_n3">你的设备</div><div class="s" data-i18n="flow_n3s">localStorage</div></div><div class="flow-arrow">···</div>
+    <div class="flow-node"><div class="ic">☁️</div><div class="t" data-i18n="flow_n4">我们的服务器</div><div class="s flow-x" data-i18n="flow_n4s">✕ 永不存储你的记忆</div></div>
+  </div></div>
+</div></header>
+<div class="trust-strip"><div class="wrap">
+  <div class="stat"><div class="n">AES-256</div><div class="l" data-i18n="stat1">GCM 本地加密</div></div>
+  <div class="stat"><div class="n">210K</div><div class="l" data-i18n="stat2">PBKDF2 迭代</div></div>
+  <div class="stat"><div class="n">0</div><div class="l" data-i18n="stat3">记忆上传服务器</div></div>
+  <div class="stat"><div class="n">14</div><div class="l" data-i18n="stat4">种语言界面</div></div>
+  <div class="stat"><div class="n">100%</div><div class="l" data-i18n="stat5">数据可导出</div></div>
+</div></div>
+<section id="how"><div class="wrap">
+  <div class="eyebrow" data-i18n="eyebrow_how">HOW IT WORKS</div><h2 data-i18n="h2_how">三步，把 AI 变成“你的”</h2>
+  <p class="sec-sub" data-i18n="sub_how">不需要注册账号，不需要信任我们的服务器。打开即用，钥匙在你手里。</p>
+  <div class="steps">
+    <div class="step"><h3 data-i18n="step1t">打开就用</h3><p data-i18n="step1p">单文件应用，浏览器直接运行。免费版无需信用卡，先体验再决定。</p></div>
+    <div class="step"><h3 data-i18n="step2t">设置你的钥匙</h3><p data-i18n="step2p">填入你自己的 LLM API Key（OpenAI / Anthropic / OpenRouter / 本地 Ollama），模型与花费都由你决定。</p></div>
+    <div class="step"><h3 data-i18n="step3t">加密你的记忆</h3><p data-i18n="step3p">设一个只有你知道的口令，用 AES-256-GCM 加密本地记忆。我们无法解密，也无法上传。</p></div>
+  </div>
+</div></section>
+<section id="features"><div class="wrap">
+  <div class="eyebrow" data-i18n="eyebrow_feat">WHY AGI ENGINE</div><h2 data-i18n="h2_feat">隐私不是功能，是前提</h2>
+  <p class="sec-sub" data-i18n="sub_feat">大部分 AI 工具把你的对话存到云端。我们把它留在你手里——并且用数学保证。</p>
+  <div class="grid">
+    <div class="card"><div class="ic">🔑</div><h3 data-i18n="f1t">钥匙只在你手里</h3><p data-i18n="f1p">口令经 PBKDF2（21 万次迭代）派生密钥，从不存储、从不上传。忘了口令？连我们也救不回——这正是加密该有的样子。</p></div>
+    <div class="card"><div class="ic">🧠</div><h3 data-i18n="f2t">真正记得你的 AI</h3><p data-i18n="f2p">记忆与偏好在本地积累，越用越懂你。不锁定、不画像，数据始终属于你。</p></div>
+    <div class="card"><div class="ic">🔌</div><h3 data-i18n="f3t">模型自带，成本自控</h3><p data-i18n="f3p">用你自己的 API Key 直连模型商，不经过我们服务器。用哪个模型、花多少钱，你说了算。</p></div>
+    <div class="card"><div class="ic">📦</div><h3 data-i18n="f4t">随时完整带走</h3><p data-i18n="f4p">一键导出全部数据。想走就走，不留残渣，没有任何绑定。</p></div>
+    <div class="card"><div class="ic">🌍</div><h3 data-i18n="f5t">14 种语言</h3><p data-i18n="f5p">中文、英文、日文、韩文、西法德葡俄印阿等，按浏览器语言自动切换。</p></div>
+    <div class="card"><div class="ic">🎮</div><h3 data-i18n="f6t">用着用着就上瘾</h3><p data-i18n="f6p">连续签到、等级、成就、任务市场。把“保护隐私”变成一件有正反馈的事。</p></div>
+  </div>
+</div></section>
+<section id="pricing"><div class="wrap">
+  <div class="eyebrow" data-i18n="eyebrow_price">SIMPLE PRICING</div><h2 data-i18n="h2_price">一次买断，拒绝无限扣费</h2>
+  <p class="sec-sub" data-i18n="sub_price">免费版永久可用。Pro 解锁全部能力——年付折合 $8.33/月，不到主流订阅的一半。</p>
+  <div class="pricing-grid">
+    <div class="price-card"><div class="price-name" data-i18n="p_free_name">Free</div><div class="price-amount">$0</div><div style="color:var(--muted);font-size:13px" data-i18n="p_free_desc">永久免费</div>
+      <ul class="price-feats"><li data-i18n="p_free_f1">本地 AI 对话</li><li data-i18n="p_free_f2">基础记忆存储</li><li data-i18n="p_free_f3">14 种语言</li><li data-i18n="p_free_f4">数据导出</li></ul>
+      <a href="app.html" class="btn btn-ghost" data-cta="free-tier" data-i18n="cta_free2">免费开始</a>
+    </div>
+    <div class="price-card featured"><div class="price-tag" data-i18n="p_best">最佳价值 · 省 58%</div><div class="price-name">Pro Annual</div>
+      <div class="price-amount">$100<small data-i18n="p_year">/年</small></div><div class="price-anchor">$240 <span data-i18n="p_vs">对比主流年费</span></div><br><div class="price-save" data-i18n="p_save">折合 $8.33/月 · 省 $140</div>
+      <ul class="price-feats"><li data-i18n="p_pro_f1">全部免费功能</li><li data-i18n="p_pro_f2">无限加密记忆</li><li data-i18n="p_pro_f3">高级记忆搜索</li><li data-i18n="p_pro_f4">全部成就与任务</li><li data-i18n="p_pro_f5">推荐返利 · 好友各得 +1 月</li><li data-i18n="p_pro_f6">新功能优先体验</li></ul>
+      <a href="https://www.paypal.com/ncp/payment/SBJ2ZGWP7ACLQ" target="_blank" rel="noopener" class="btn btn-primary" data-cta="paypal-annual" data-i18n="cta_buy">购买年付 $100</a>
+    </div>
+  </div>
+  <div class="pricing-foot"><span data-i18n="pf1">月付 $15 可选 · </span><a href="https://www.paypal.com/ncp/payment/6SAYLMHK2ZHNE" target="_blank" rel="noopener" data-cta="paypal-monthly" data-i18n="pf2">立即月付</a><span data-i18n="pf3"> · 或 </span><a href="https://paypal.me/fnhiq23" target="_blank" rel="noopener" data-cta="paypal-me">PayPal.Me</a><span data-i18n="pf4" style="display:block;margin-top:8px">自带 API Key 的费用另计，由你与模型商直接结算。</span></div>
+</div></section>
+<section><div class="wrap">
+  <div class="eyebrow" data-i18n="eyebrow_risk">ZERO RISK</div><h2 data-i18n="h2_risk">先体验，再决定</h2>
+  <div class="risk-grid">
+    <div class="risk"><div class="ic">🆓</div><h4 data-i18n="r1t">先免费，无需信用卡</h4><p data-i18n="r1p">免费版永久可用，先确认它真的适合你。</p></div>
+    <div class="risk"><div class="ic">↩️</div><h4 data-i18n="r2t">随时取消，无合约</h4><p data-i18n="r2p">在 PayPal 一键取消自动付款，不被套牢。</p></div>
+    <div class="risk"><div class="ic">📤</div><h4 data-i18n="r3t">数据随时完整导出</h4><p data-i18n="r3p">不爽就带走所有数据，说走就走。</p></div>
+    <div class="risk"><div class="ic">🛡️</div><h4 data-i18n="r4t">PayPal 买家保护</h4><p data-i18n="r4p">通过 PayPal 付款，受其买家保护政策覆盖。</p></div>
+  </div>
+</div></section>
+<section class="proof"><div class="wrap">
+  <div class="eyebrow" data-i18n="eyebrow_proof">BUILT ON TRUST, NOT HYPE</div><h2 data-i18n="h2_proof">没有虚假的“10 万用户”</h2>
+  <p class="sec-sub" data-i18n="sub_proof">我们刚起步。所以不靠编造的数字取信你，而是靠可验证的事实。</p>
+  <div class="proof-grid">
+    <div class="proof-item"><div class="ic">🔍</div><h4 data-i18n="pr1t">开源可审计</h4><p data-i18n="pr1p">代码公开，任何人都能验证“零上传”不是一句口号。</p><a href="https://github.com/Fnhiq23/agi-engine-v3" target="_blank" rel="noopener">GitHub →</a></div>
+    <div class="proof-item"><div class="ic">🔐</div><h4 data-i18n="pr2t">加密用标准算法</h4><p data-i18n="pr2p">AES-256-GCM + PBKDF2 210K，浏览器原生 Web Crypto API，无自研“魔法”。</p></div>
+    <div class="proof-item"><div class="ic">📄</div><h4 data-i18n="pr3t">白纸黑字的政策</h4><p data-i18n="pr3p">隐私政策、服务条款、退款政策全部公开，不含隐藏条款。</p><a href="privacy.html" target="_blank" rel="noopener">阅读政策 →</a></div>
+    <div class="proof-item"><div class="ic">💳</div><h4 data-i18n="pr4t">PayPal 处理支付</h4><p data-i18n="pr4p">我们不接触你的银行卡信息，支付由 PayPal 安全处理。</p></div>
+  </div>
+</div></section>
+<section id="faq"><div class="wrap">
+  <div class="eyebrow" data-i18n="eyebrow_faq">FAQ</div><h2 data-i18n="h2_faq">付款前，你可能想问</h2>
+  <div class="faq-list">
+    <div class="faq-item"><div class="faq-q" data-i18n="q1">我的数据安全吗？你们能看到吗？</div><div class="faq-a" data-i18n="a1">不能。记忆保存在你自己的浏览器本地，服务器只记录匿名埋点事件和付款认领状态，不存储、不读取你的内容。可启用 Privacy Vault 用 AES-256-GCM 加密，口令只有你知道。详见隐私政策。</div></div>
+    <div class="faq-item"><div class="faq-q" data-i18n="q2">为什么要收费？免费版不够吗？</div><div class="faq-a" data-i18n="a2">免费版永久可用，核心功能都在。Pro 解锁无限加密记忆、高级搜索、全部成就与推荐返利。收费是为了让项目能持续维护，而不是靠广告或出卖数据。</div></div>
+    <div class="faq-item"><div class="faq-q" data-i18n="q3">为什么还要我自己配 API Key？</div><div class="faq-a" data-i18n="a3">因为这是“数据主权”的一部分——模型调用由你直连模型商，不经过我们服务器，成本也由你直接控制。API Key 不会上传。模型费用与 Pro 费用分开。</div></div>
+    <div class="faq-item"><div class="faq-q" data-i18n="q4">能退款吗？</div><div class="faq-a" data-i18n="a4">订阅可随时取消，已付费用原则上不退。若遇到重复扣款、付款后服务未开通等情形，可发邮件至 80306495@qq.com 申请，由创始人逐案确认（需创始人确认），不承诺具体结果。也可向 PayPal 申请买家保护。详见退款政策。</div></div>
+    <div class="faq-item"><div class="faq-q" data-i18n="q5">支持哪些支付方式？</div><div class="faq-a" data-i18n="a5">通过 PayPal 付款（年付 $100 / 月付 $15），也可用 PayPal.Me 转账。PayPal 处理支付，我们不接触你的银行卡信息。</div></div>
+    <div class="faq-item"><div class="faq-q" data-i18n="q6">怎么取消订阅？</div><div class="faq-a" data-i18n="a6">随时在 PayPal 账户“付款与收款 → 自动付款”中取消，或发邮件至 80306495@qq.com 协助。取消后权限保留到当前周期结束，之后不再扣款。</div></div>
+    <div class="faq-item"><div class="faq-q" data-i18n="q7">换设备或清浏览器数据会怎样？</div><div class="faq-a" data-i18n="a7">记忆存在本地，清理浏览器数据或换设备会导致本地数据丢失——请务必用导出功能自行备份。这是本地优先架构的诚实代价。</div></div>
+    <div class="faq-item"><div class="faq-q" data-i18n="q8">有区块链、代币或智能合约吗？</div><div class="faq-a" data-i18n="a8">没有。我们不蹭任何概念。AGI Engine 就是本地运行的 AI 助手，用成熟加密标准保护数据。看到声称本项目有代币的信息，都不是官方。</div></div>
+  </div>
+</div></section>
+<section id="developers"><div class="wrap">
+  <div class="devband"><div class="eyebrow" data-i18n="eyebrow_dev">BUILD WITH US</div><h3 data-i18n="dev_h3">开发者与推广者，一起把隐私做成一门生意</h3>
+    <p data-i18n="dev_p">项目 MIT 开源。贡献代码、翻译、安全审计，或把产品推荐给朋友——都能获得回报。推荐好友订阅，双方各得 +1 个月 Pro；认证推广者可获首年 20% 现金佣金（需申请与确认）。</p>
+    <div class="row"><a href="CONTRIBUTING.md" target="_blank" rel="noopener" class="btn btn-ghost" data-cta="contributing" data-i18n="dev_b1">成为贡献者</a><a href="AFFILIATE.md" target="_blank" rel="noopener" class="btn btn-ghost" data-cta="affiliate" data-i18n="dev_b2">推广分润计划</a><a href="https://github.com/Fnhiq23/agi-engine-v3" target="_blank" rel="noopener" class="btn btn-ghost" data-cta="github" data-i18n="dev_b3">GitHub 仓库</a></div>
+  </div>
+</div></section>
+<section class="final"><div class="wrap"><h2 data-i18n="final_h2">你的记忆，值得一个只属于你的地方。</h2><p class="sub" data-i18n="final_sub">免费开始，无需信用卡。30 秒内就能感受到区别。</p><a href="app.html" class="btn btn-primary" data-cta="final-free" data-i18n="final_cta">免费开始 · 把记忆留在本地</a></div></section>
+<footer><div class="wrap"><div class="foot-grid">
+  <div class="foot-brand"><div class="logo"><span class="mark">🔐</span> AGI Engine</div><p data-i18n="foot_desc">浏览器本地运行的个人 AI 助手。你的 AI，你的钥匙，你的数据。</p></div>
+  <div class="foot-col"><h5 data-i18n="foot_product">产品</h5><a href="#how" data-i18n="nav_how">如何工作</a><a href="#features" data-i18n="nav_features">功能</a><a href="#pricing" data-i18n="nav_pricing">定价</a><a href="app.html" data-i18n="cta_free">免费开始</a></div>
+  <div class="foot-col"><h5 data-i18n="foot_trust">信任与法律</h5><a href="privacy.html">隐私政策</a><a href="terms.html">服务条款</a><a href="refund.html">退款政策</a><a href="faq.html" data-i18n="nav_faq">FAQ</a></div>
+  <div class="foot-col"><h5 data-i18n="foot_community">社区</h5><a href="https://github.com/Fnhiq23/agi-engine-v3" target="_blank" rel="noopener">GitHub</a><a href="CONTRIBUTING.md" target="_blank" rel="noopener" data-i18n="nav_dev">开发者</a><a href="AFFILIATE.md" target="_blank" rel="noopener" data-i18n="foot_affiliate">推广分润</a><a href="mailto:80306495@qq.com">80306495@qq.com</a></div>
+</div><div class="foot-bottom" data-i18n="foot_bottom">© 2026 AGI Engine · MIT 开源 · 本项目不含区块链、代币或智能合约 · 所有数据主张均可对照公开代码验证</div></div></footer>
+</div>
+<script>
+/* ===== i18n ===== */
+const LANGS={'zh-CN':'简体中文','zh-TW':'繁體中文','en':'English','ja':'日本語','ko':'한국어','es':'Español','fr':'Français','de':'Deutsch','pt':'Português','ru':'Русский','hi':'हिन्दी','ar':'العربية','id':'Bahasa Indonesia','vi':'Tiếng Việt'};
+const I18N={
+'zh-CN':{
+nav_how:'如何工作',nav_features:'功能',nav_pricing:'定价',nav_faq:'FAQ',nav_dev:'开发者',cta_free:'免费开始',badge_top:'开源 · 本地优先 · 零数据上传',
+hero_h1:'别把你的记忆，<span class="hl">交给别人的云端。</span>',hero_sub:'每一条笔记、每一次对话，本该留在你自己的设备里。AGI Engine 本地加密存储，钥匙自持，随时完整导出——一次买断，年费不到大厂一半。',hero_cta1:'把记忆留在本地 · 免费开始',hero_cta2:'了解定价',hero_note:'无需信用卡 · <span>随时取消</span> · 数据随时完整导出',
+flow_title:'你的数据，只走这条路径',flow_n1:'你的浏览器',flow_n1s:'本地运行',flow_n2:'AES-256 加密',flow_n2s:'钥匙只有你知道',flow_n3:'你的设备',flow_n3s:'localStorage',flow_n4:'我们的服务器',flow_n4s:'✕ 永不存储你的记忆',
+stat1:'GCM 本地加密',stat2:'PBKDF2 迭代',stat3:'记忆上传服务器',stat4:'种语言界面',stat5:'数据可导出',
+eyebrow_how:'HOW IT WORKS',h2_how:'三步，把 AI 变成“你的”',sub_how:'不需要注册账号，不需要信任我们的服务器。打开即用，钥匙在你手里。',step1t:'打开就用',step1p:'单文件应用，浏览器直接运行。免费版无需信用卡，先体验再决定。',step2t:'设置你的钥匙',step2p:'填入你自己的 LLM API Key（OpenAI / Anthropic / OpenRouter / 本地 Ollama），模型与花费都由你决定。',step3t:'加密你的记忆',step3p:'设一个只有你知道的口令，用 AES-256-GCM 加密本地记忆。我们无法解密，也无法上传。',
+eyebrow_feat:'WHY AGI ENGINE',h2_feat:'隐私不是功能，是前提',sub_feat:'大部分 AI 工具把你的对话存到云端。我们把它留在你手里——并且用数学保证。',f1t:'钥匙只在你手里',f1p:'口令经 PBKDF2（21 万次迭代）派生密钥，从不存储、从不上传。忘了口令？连我们也救不回——这正是加密该有的样子。',f2t:'真正记得你的 AI',f2p:'记忆与偏好在本地积累，越用越懂你。不锁定、不画像，数据始终属于你。',f3t:'模型自带，成本自控',f3p:'用你自己的 API Key 直连模型商，不经过我们服务器。用哪个模型、花多少钱，你说了算。',f4t:'随时完整带走',f4p:'一键导出全部数据。想走就走，不留残渣，没有任何绑定。',f5t:'14 种语言',f5p:'中文、英文、日文、韩文、西法德葡俄印阿等，按浏览器语言自动切换。',f6t:'用着用着就上瘾',f6p:'连续签到、等级、成就、任务市场。把“保护隐私”变成一件有正反馈的事。',
+eyebrow_price:'SIMPLE PRICING',h2_price:'一次买断，拒绝无限扣费',sub_price:'免费版永久可用。Pro 解锁全部能力——年付折合 $8.33/月，不到主流订阅的一半。',p_free_name:'Free',p_free_desc:'永久免费',p_free_f1:'本地 AI 对话',p_free_f2:'基础记忆存储',p_free_f3:'14 种语言',p_free_f4:'数据导出',cta_free2:'免费开始',p_best:'最佳价值 · 省 58%',p_year:'/年',p_vs:'对比主流年费',p_save:'折合 $8.33/月 · 省 $140',p_pro_f1:'全部免费功能',p_pro_f2:'无限加密记忆',p_pro_f3:'高级记忆搜索',p_pro_f4:'全部成就与任务',p_pro_f5:'推荐返利 · 好友各得 +1 月',p_pro_f6:'新功能优先体验',cta_buy:'购买年付 $100',pf1:'月付 $15 可选 · ',pf2:'立即月付',pf3:' · 或 ',pf4:'自带 API Key 的费用另计，由你与模型商直接结算。',
+eyebrow_risk:'ZERO RISK',h2_risk:'先体验，再决定',r1t:'先免费，无需信用卡',r1p:'免费版永久可用，先确认它真的适合你。',r2t:'随时取消，无合约',r2p:'在 PayPal 一键取消自动付款，不被套牢。',r3t:'数据随时完整导出',r3p:'不爽就带走所有数据，说走就走。',r4t:'PayPal 买家保护',r4p:'通过 PayPal 付款，受其买家保护政策覆盖。',
+eyebrow_proof:'BUILT ON TRUST, NOT HYPE',h2_proof:'没有虚假的“10 万用户”',sub_proof:'我们刚起步。所以不靠编造的数字取信你，而是靠可验证的事实。',pr1t:'开源可审计',pr1p:'代码公开，任何人都能验证“零上传”不是一句口号。',pr2t:'加密用标准算法',pr2p:'AES-256-GCM + PBKDF2 210K，浏览器原生 Web Crypto API，无自研“魔法”。',pr3t:'白纸黑字的政策',pr3p:'隐私政策、服务条款、退款政策全部公开，不含隐藏条款。',pr4t:'PayPal 处理支付',pr4p:'我们不接触你的银行卡信息，支付由 PayPal 安全处理。',
+eyebrow_faq:'FAQ',h2_faq:'付款前，你可能想问',q1:'我的数据安全吗？你们能看到吗？',a1:'不能。记忆保存在你自己的浏览器本地，服务器只记录匿名埋点事件和付款认领状态，不存储、不读取你的内容。可启用 Privacy Vault 用 AES-256-GCM 加密，口令只有你知道。详见隐私政策。',q2:'为什么要收费？免费版不够吗？',a2:'免费版永久可用，核心功能都在。Pro 解锁无限加密记忆、高级搜索、全部成就与推荐返利。收费是为了让项目能持续维护，而不是靠广告或出卖数据。',q3:'为什么还要我自己配 API Key？',a3:'因为这是“数据主权”的一部分——模型调用由你直连模型商，不经过我们服务器，成本也由你直接控制。API Key 不会上传。模型费用与 Pro 费用分开。',q4:'能退款吗？',a4:'订阅可随时取消，已付费用原则上不退。若遇到重复扣款、付款后服务未开通等情形，可发邮件至 80306495@qq.com 申请，由创始人逐案确认（需创始人确认），不承诺具体结果。也可向 PayPal 申请买家保护。详见退款政策。',q5:'支持哪些支付方式？',a5:'通过 PayPal 付款（年付 $100 / 月付 $15），也可用 PayPal.Me 转账。PayPal 处理支付，我们不接触你的银行卡信息。',q6:'怎么取消订阅？',a6:'随时在 PayPal 账户“付款与收款 → 自动付款”中取消，或发邮件至 80306495@qq.com 协助。取消后权限保留到当前周期结束，之后不再扣款。',q7:'换设备或清浏览器数据会怎样？',a7:'记忆存在本地，清理浏览器数据或换设备会导致本地数据丢失——请务必用导出功能自行备份。这是本地优先架构的诚实代价。',q8:'有区块链、代币或智能合约吗？',a8:'没有。我们不蹭任何概念。AGI Engine 就是本地运行的 AI 助手，用成熟加密标准保护数据。看到声称本项目有代币的信息，都不是官方。',
+eyebrow_dev:'BUILD WITH US',dev_h3:'开发者与推广者，一起把隐私做成一门生意',dev_p:'项目 MIT 开源。贡献代码、翻译、安全审计，或把产品推荐给朋友——都能获得回报。推荐好友订阅，双方各得 +1 个月 Pro；认证推广者可获首年 20% 现金佣金（需申请与确认）。',dev_b1:'成为贡献者',dev_b2:'推广分润计划',dev_b3:'GitHub 仓库',final_h2:'你的记忆，值得一个只属于你的地方。',final_sub:'免费开始，无需信用卡。30 秒内就能感受到区别。',final_cta:'免费开始 · 把记忆留在本地',foot_desc:'浏览器本地运行的个人 AI 助手。你的 AI，你的钥匙，你的数据。',foot_product:'产品',foot_trust:'信任与法律',foot_community:'社区',foot_affiliate:'推广分润',foot_bottom:'© 2026 AGI Engine · MIT 开源 · 本项目不含区块链、代币或智能合约 · 所有数据主张均可对照公开代码验证'
+},
+'en':{
+nav_how:'How it works',nav_features:'Features',nav_pricing:'Pricing',nav_faq:'FAQ',nav_dev:'Developers',cta_free:'Start free',badge_top:'Open source · Local-first · Zero uploads',
+hero_h1:"Don't hand your memories to <span class=\"hl\">someone else's cloud.</span>",hero_sub:'Every note, every conversation belongs on your own device. AGI Engine stores them locally, encrypted, with a key only you hold — export everything anytime. One payment, under half the price of big-cloud subscriptions.',hero_cta1:'Keep it local — start free',hero_cta2:'See pricing',hero_note:'No credit card · <span>Cancel anytime</span> · Export everything anytime',
+flow_title:'Your data only travels this path',flow_n1:'Your browser',flow_n1s:'Runs locally',flow_n2:'AES-256 encryption',flow_n2s:'Key only you know',flow_n3:'Your device',flow_n3s:'localStorage',flow_n4:'Our server',flow_n4s:'✕ Never stores your memories',
+stat1:'GCM local encryption',stat2:'PBKDF2 iterations',stat3:'memories uploaded',stat4:'languages',stat5:'data exportable',
+eyebrow_how:'HOW IT WORKS',h2_how:'Three steps to make the AI yours',sub_how:'No signup, no need to trust our servers. Open and go — the keys stay with you.',step1t:'Open and use',step1p:'A single-file app that runs in your browser. Free tier needs no credit card — try it, then decide.',step2t:'Set your key',step2p:'Bring your own LLM API key (OpenAI / Anthropic / OpenRouter / local Ollama). You choose the model and control the spend.',step3t:'Encrypt your memories',step3p:'Set a passphrase only you know, encrypt local memories with AES-256-GCM. We cannot decrypt them or upload them.',
+eyebrow_feat:'WHY AGI ENGINE',h2_feat:'Privacy isn’t a feature. It’s the foundation.',sub_feat:'Most AI tools store your conversations in the cloud. We keep them in your hands — and guarantee it with math.',f1t:'The key stays with you',f1p:'Your passphrase derives the key via PBKDF2 (210k iterations) — never stored, never uploaded. Forget it? Not even we can recover it — that’s how encryption should work.',f2t:'An AI that really remembers',f2p:'Memories and preferences accumulate locally. The more you use it, the better it knows you. No lock-in, no profiling.',f3t:'Bring your model, control cost',f3p:'Use your own API key to connect directly to the provider — never through our servers. You decide the model and the spend.',f4t:'Take it all, anytime',f4p:'Export all your data in one click. Leave anytime, no residue, no binding.',f5t:'14 languages',f5p:'Chinese, English, Japanese, Korean, Spanish, French, German, Portuguese, Russian, Hindi, Arabic and more — auto-switches by browser language.',f6t:'Addictive in a good way',f6p:'Daily streaks, levels, achievements, a task market. Protecting privacy becomes a rewarding habit.',
+eyebrow_price:'SIMPLE PRICING',h2_price:'One payment. No endless billing.',sub_price:'Free forever. Pro unlocks everything — annual is $8.33/mo, under half of mainstream subscriptions.',p_free_name:'Free',p_free_desc:'Free forever',p_free_f1:'Local AI chat',p_free_f2:'Basic memory storage',p_free_f3:'14 languages',p_free_f4:'Data export',cta_free2:'Start free',p_best:'Best value · Save 58%',p_year:'/yr',p_vs:'vs mainstream annual',p_save:'$8.33/mo · Save $140',p_pro_f1:'Everything in Free',p_pro_f2:'Unlimited encrypted memory',p_pro_f3:'Advanced memory search',p_pro_f4:'All achievements & tasks',p_pro_f5:'Referral rewards · both get +1 mo',p_pro_f6:'Early access to new features',cta_buy:'Buy annual $100',pf1:'Monthly $15 available · ',pf2:'Pay monthly',pf3:' · or ',pf4:'BYOK API costs are separate, settled directly with your provider.',
+eyebrow_risk:'ZERO RISK',h2_risk:'Try it first. Decide later.',r1t:'Free first, no credit card',r1p:'Free tier is permanent — confirm it truly fits you.',r2t:'Cancel anytime, no contract',r2p:'Cancel automatic payments in PayPal with one click.',r3t:'Export everything, anytime',r3p:'Take all your data with you. Leave with nothing left behind.',r4t:'PayPal buyer protection',r4p:'Pay via PayPal, covered by its buyer protection policy.',
+eyebrow_proof:'BUILT ON TRUST, NOT HYPE',h2_proof:'No fake “100,000 users”',sub_proof:'We just started. So we earn trust with verifiable facts, not invented numbers.',pr1t:'Open source & auditable',pr1p:'Code is public — anyone can verify “zero upload” is not just a slogan.',pr2t:'Standard algorithms',pr2p:'AES-256-GCM + PBKDF2 210K, native Web Crypto API, no homebrew “magic”.',pr3t:'Policies in black and white',pr3p:'Privacy, Terms, and Refund policies are all public — no hidden clauses.',pr4t:'PayPal handles payment',pr4p:'We never touch your card details; PayPal handles payments securely.',
+eyebrow_faq:'FAQ',h2_faq:'Before you pay, you may ask',q1:'Is my data safe? Can you see it?',a1:'No. Memories stay in your browser. Our server only logs anonymous events and payment-claim status — it never stores or reads your content. Enable Privacy Vault to encrypt with AES-256-GCM; only you know the passphrase. See the Privacy Policy.',q2:'Why charge? Isn’t free enough?',a2:'Free is permanent with core features. Pro unlocks unlimited encrypted memory, advanced search, all achievements, and referral rewards. Charging keeps the project maintained — not funded by ads or selling data.',q3:'Why do I bring my own API key?',a3:'It’s part of data sovereignty — model calls go directly from you to the provider, never through our servers, and you control the cost. Keys are never uploaded. Model costs are separate from Pro.',q4:'Can I get a refund?',a4:'Subscriptions can be cancelled anytime; paid fees are generally non-refundable. For double charges or unactivated service, email 80306495@qq.com — decided case-by-case by the founder (subject to founder confirmation), no specific outcome guaranteed. You may also claim via PayPal. See the Refund Policy.',q5:'What payment methods?',a5:'Pay via PayPal (annual $100 / monthly $15), or PayPal.Me. PayPal handles payment; we never touch your card details.',q6:'How do I cancel?',a6:'Cancel anytime under PayPal “Payments → Automatic payments”, or email 80306495@qq.com for help. Access continues until the period ends, then no further charge.',q7:'What if I switch devices or clear browser data?',a7:'Memories are local — clearing browser data or switching devices loses them. Please back up via export. That’s the honest trade-off of local-first.',q8:'Is there blockchain, tokens, or smart contracts?',a8:'No. We don’t chase buzzwords. AGI Engine is a local AI assistant using mature encryption standards. Any claim that this project has a token is not official.',
+eyebrow_dev:'BUILD WITH US',dev_h3:'Developers & promoters: let’s make privacy a business',dev_p:'MIT open source. Contribute code, translations, security audits — or refer friends — and get rewarded. Refer a subscriber and both get +1 month Pro; certified affiliates can earn 20% first-year commission (application & confirmation required).',dev_b1:'Become a contributor',dev_b2:'Affiliate program',dev_b3:'GitHub repo',final_h2:'Your memories deserve a place that’s only yours.',final_sub:'Start free, no credit card. Feel the difference in 30 seconds.',final_cta:'Start free — keep memories local',foot_desc:'A local-first personal AI assistant. Your AI, your key, your data.',foot_product:'Product',foot_trust:'Trust & legal',foot_community:'Community',foot_affiliate:'Affiliate',foot_bottom:'© 2026 AGI Engine · MIT licensed · No blockchain, tokens, or smart contracts · Every data claim is verifiable against public code'
+}
+};
+let CUR='zh-CN';
+function t(k){return (I18N[CUR]&&I18N[CUR][k])||(I18N.en[k])||k;}
+function applyLang(){document.documentElement.lang=CUR;document.querySelectorAll('[data-i18n]').forEach(el=>{el.innerHTML=t(el.getAttribute('data-i18n'));});document.getElementById('langCur').textContent=LANGS[CUR]||CUR;try{localStorage.setItem('agi_site_lang',CUR);}catch(e){}}
+function renderLangMenu(){const m=document.getElementById('langMenu');m.innerHTML=Object.keys(LANGS).map(k=>'<button data-lang="'+k+'" class="'+(k===CUR?'active':'')+'">'+LANGS[k]+'</button>').join('');m.querySelectorAll('button').forEach(b=>b.onclick=()=>{setLang(b.dataset.lang);toggleLang();});}
+function setLang(l){CUR=I18N[l]?l:'en';applyLang();}
+function toggleLang(){document.getElementById('langMenu').classList.toggle('open');}
+document.addEventListener('click',e=>{if(!e.target.closest('.lang-wrap'))document.getElementById('langMenu').classList.remove('open');});
+/* ===== Analytics (surface=site) ===== */
+const SITE_BACKEND='https://acb7adbd80f066c9d.app.workbuddy.host',SITE_SHARE='S4XAXZRX4F';
+function sid(){let s=sessionStorage.getItem('agi_site_sid');if(!s){s='s_'+Math.random().toString(36).slice(2,10);sessionStorage.setItem('agi_site_sid',s);}return s;}
+function srcInfo(){const q=new URLSearchParams(location.search);const src=(q.get('src')||'direct').toLowerCase().replace(/[^a-z0-9-]/g,'').slice(0,32);const ref=(q.get('ref')||'').toUpperCase().replace(/[^A-Z0-9-]/g,'').slice(0,16);if(src!=='direct'){try{localStorage.setItem('agi_site_src',src);}catch(e){}}if(ref){try{localStorage.setItem('agi_ref_by',JSON.stringify({code:ref,ts:Date.now()}));}catch(e){}}let ss='',sr='';try{ss=localStorage.getItem('agi_site_src')||'';const v=JSON.parse(localStorage.getItem('agi_ref_by')||'{}');sr=v.code||'';}catch(e){}return{src,ref,ss,sr};}
+function trackSite(type,extra){try{const s=srcInfo();const data=Object.assign({page:location.pathname.split('/').pop()||'index',lang:CUR,sid:sid(),sourceRaw:s.src,refCode:s.sr||s.ref},(extra&&extra.data)||{});const body={type,surface:'site',clientId:sid(),channel:s.ss||s.src||'direct',data};fetch(SITE_BACKEND+'/api/event?sharecode='+SITE_SHARE,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body),keepalive:true}).catch(()=>{});}catch(e){}}
+function decorateLinks(){const s=srcInfo();document.querySelectorAll('a[data-cta]').forEach(a=>{a.addEventListener('click',()=>{const c=a.getAttribute('data-cta');let type='hero_cta_click';if(c.indexOf('paypal')===0)type='outbound_paypal_click';else if(['hero-free','final-free','nav','free-tier'].indexOf(c)>=0)type='site_to_app_click';trackSite(type,{data:{ctaId:c}});});});document.querySelectorAll('a[href="app.html"]').forEach(a=>{const u=new URL(a.getAttribute('href'),location.href);if(s.src!=='direct')u.searchParams.set('src',s.src);if(s.sr)u.searchParams.set('ref',s.sr);u.searchParams.set('sid',sid());a.setAttribute('href',u.pathname+u.search);});}
+function observeOnce(sel,type,data){const el=document.querySelector(sel);if(!el)return;const io=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting){trackSite(type,{data});io.disconnect();}});},{threshold:0.5});io.observe(el);}
+(function init(){try{const saved=localStorage.getItem('agi_site_lang');if(saved)CUR=I18N[saved]?saved:'en';else{const bl=(navigator.language||'en').toLowerCase();CUR=bl.startsWith('zh')?'zh-CN':'en';}}catch(e){}applyLang();renderLangMenu();decorateLinks();trackSite('site_view');observeOnce('#heroCta','hero_cta_view',{ctaId:'hero-free'});observeOnce('#pricing .price-card.featured','pricing_view',{planHighlighted:'annual'});document.querySelectorAll('.faq-q').forEach(q=>q.addEventListener('click',()=>{q.parentElement.classList.toggle('open');if(q.parentElement.classList.contains('open'))trackSite('faq_expand');}));document.querySelectorAll('a[href="privacy.html"],a[href="terms.html"],a[href="refund.html"],a[href="faq.html"]').forEach(a=>a.addEventListener('click',()=>trackSite('policy_link_click')));})();
+</script>
+</body>
+</html>
