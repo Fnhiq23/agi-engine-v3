@@ -3,10 +3,25 @@ node_modules/
 # Runtime data
 server/data/*.json
 server/data/*.tmp
-# Secrets — NEVER commit
+# Secrets — NEVER commit (paypal creds, mail auth code, tokens)
 server/.env
+server/.env.*
 server/.mail.env
+.env
+.env.*
 *.pem
+*.key
+ADMIN_TOKEN*
+
+# Runtime data (real payments / claims — never expose)
+server/data/*.json
+server/data/*.tmp
+
+# Test/verify artifacts
+verify.html
+*.bak
+*.bak2
+*.bak3
 # Logs
 *.log
 # OS

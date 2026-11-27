@@ -127,6 +127,15 @@ $('submit').addEventListener('click', async ()=>{
   } catch(e){ msg.className='msg err'; msg.textContent='网络错误：'+e.message; }
   btn.disabled=false; btn.textContent='提交凭证';
 });
+
+// Referral attribution: carry ?ref= or stored code into claim payload.
+(function(){
+  const params = new URLSearchParams(location.search);
+  let code = params.get('ref') || '';
+  try { if (!code) code = (JSON.parse(localStorage.getItem('agi_ref_by')||'{}').code)||''; } catch(e){}
+  const f = document.getElementById('claimRefCode');
+  if (f) f.value = String(code).slice(0,16).toUpperCase().replace(/[^A-Z0-9-]/g,'');
+})();
 </script>
 </body>
 </html>

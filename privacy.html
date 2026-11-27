@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>隐私政策 | AGI Engine</title>
+<meta name="description" content="AGI Engine 隐私政策：记忆与笔记保存在你自己的浏览器中，服务器不存储对话内容，不收集 API Key。">
+<style>
+:root{--bg:#0b0f14;--fg:#e8eef4;--muted:#93a1b1;--acc:#6ee7b7;--line:#24303d;--amb:#f5c26b}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.75 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+.wrap{max-width:820px;margin:0 auto;padding:32px 20px 80px}
+a{color:var(--acc)}nav.doc-nav{display:flex;gap:16px;flex-wrap:wrap;padding:12px 0;border-bottom:1px solid var(--line);font-size:14px}
+h1{font-size:30px;line-height:1.3}h2{margin-top:40px;font-size:21px;border-left:3px solid var(--acc);padding-left:12px}
+h3{font-size:17px;margin-top:26px}table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{border:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top}th{background:#131c26}
+blockquote{border-left:3px solid var(--amb);margin:16px 0;padding:10px 14px;background:#1a150c;color:#f3d9a5}
+code{background:#131c26;padding:1px 5px;border-radius:4px;font-size:14px}.meta{color:var(--muted);font-size:14px}
+footer.doc-footer{margin-top:56px;border-top:1px solid var(--line);padding-top:20px;font-size:14px;color:var(--muted)}
+</style>
+</head>
+<body>
+<div class="wrap">
+<nav class="doc-nav">
+  <a href="index.html">AGI Engine 首页</a>
+  <a href="privacy.html" aria-current="page">隐私政策</a>
+  <a href="terms.html">服务条款</a>
+  <a href="refund.html">退款与取消政策</a>
+  <a href="faq.html">常见问题 FAQ</a>
+</nav>
+
+<h1 id="top">隐私政策 Privacy Policy</h1>
+<p class="meta"><strong>生效日期：</strong>2026-11-27　　<strong>最后更新：</strong>2026-11-27</p>
+
+<p>AGI Engine（以下简称"本产品"）是一款在用户浏览器本地运行的单文件 PWA 个人 AI 助手，支持 14 种语言。我们深知隐私是用户选择 AI 产品的基础，因此本政策以"数据尽量不离开你的设备"为设计原则。请在使用本产品前仔细阅读本政策。</p>
+
+<h2 id="collect">1. 我们收集什么数据</h2>
+<p>我们只收集以下两类数据：</p>
+
+<h3 id="telemetry">（1）匿名埋点事件（服务端）</h3>
+<p>为使产品团队了解功能使用情况，我们会记录有限的匿名事件，每条约包含：</p>
+<ul>
+  <li><code>clientId</code>：浏览器本地生成的随机/匿名客户端标识，用于区分独立使用者，不包含你的姓名、邮箱等身份信息；</li>
+  <li>事件类型：例如页面访问、功能点击、付费入口点击等事件名称；</li>
+  <li>事件发生时间，以及用于渠道统计的匿名来源标记。</li>
+</ul>
+<p>此类数据用于统计漏斗与转化，不包含你的对话内容、记忆内容或笔记内容。</p>
+
+<h3 id="payment-claim">（2）付款认领状态（服务端）</h3>
+<p>当你通过一次性付款链接付款并主动提交认领信息时，我们会记录用于核对到账与开通权限的最小必要信息，包括：你主动提交的邮箱地址、PayPal 交易号、所购套餐、<code>clientId</code> 以及认领的审核状态（待审核 / 已通过 / 已拒绝）。我们保存这些信息仅为完成付款核对与权限开通。</p>
+
+<h2 id="not-collect">2. 我们不收集什么</h2>
+<p>为免歧义，我们在此明确声明：</p>
+<ul>
+  <li><strong>不存储你的记忆、笔记或对话内容。</strong> 这些内容保存在你自己浏览器的 localStorage 中，我们的服务器不接收、不存储、不读取它们。</li>
+  <li><strong>不收集你的 LLM API Key。</strong> 你的 API Key 由你在浏览器端填写，并用于直连你所选的模型服务商（OpenAI、Anthropic、OpenRouter、阶跃、本地 Ollama 等）。API Key 不上传至我们的服务器。</li>
+  <li><strong>不收集你的模型使用记录。</strong> 你与模型服务商之间的请求与响应，由该服务商按其隐私政策处理；我们无法访问。</li>
+  <li><strong>不收集精确地理位置、通讯录、相册、设备传感器数据。</strong></li>
+  <li><strong>不出售、不出租、不共享你的个人数据给第三方用于广告或营销。</strong></li>
+</ul>
+
+<h2 id="storage">3. 数据存储在哪里</h2>
+<table>
+  <thead><tr><th>数据类型</th><th>存储位置</th><th>谁可访问</th></tr></thead>
+  <tbody>
+    <tr><td>记忆、笔记、对话内容</td><td>你自己浏览器的 localStorage</td><td>仅你本人（及能使用该设备/浏览器的人）</td></tr>
+    <tr><td>加密后的记忆</td><td>你自己浏览器的 localStorage</td><td>仅持有你口令的人</td></tr>
+    <tr><td>匿名埋点事件</td><td>我们的服务端数据库</td><td>产品运营方（用于汇总统计）</td></tr>
+    <tr><td>付款认领状态</td><td>我们的服务端数据库</td><td>产品运营方（用于核对付款与开通权限）</td></tr>
+  </tbody>
+</table>
+<p><strong>本地加密说明：</strong>你可以选择在设置中启用 Privacy Vault，使用 Web Crypto API 对本机记忆进行加密。加密采用 <strong>AES-256-GCM</strong> 对称加密，密钥由 <strong>PBKDF2（210,000 次迭代 + 随机盐）</strong> 从你的口令派生。你的口令<strong>永不存储、永不上传</strong>。若口令丢失，加密数据将无法恢复——这是加密机制的正常特性，我们无法为你重置或找回。</p>
+<p><strong>浏览器本地存储的固有风险：</strong>清理浏览器数据、更换设备、使用隐私/无痕模式、或因浏览器策略导致站点数据被清除，都可能使本地记忆丢失。请注意使用产品内置的导出/备份功能自行备份。</p>
+
+<h2 id="cookies">4. Cookie 与本地存储说明</h2>
+<p>本产品不使用广告 Cookie、跨站跟踪 Cookie 或第三方追踪像素。</p>
+<ul>
+  <li><strong>localStorage：</strong>用于在本地保存你的设置、记忆与笔记，属于本地存储而非 Cookie。</li>
+  <li><strong><code>clientId</code>：</strong>匿名客户端标识保存在本地，用于区分独立使用者与匿名统计。</li>
+  <li>我们不接入第三方广告或分析 SDK；如未来接入，将提前更新本政策并说明。</li>
+</ul>
+
+<h2 id="third-party">5. 第三方服务</h2>
+<p>本产品的 AI 能力来自你自行选择的模型服务商。当你使用 AI 功能时，浏览器会按你的配置直连相应服务商（如 OpenAI、Anthropic、OpenRouter、阶跃，或你本机的 Ollama）。该等请求受对应服务商的隐私政策约束，我们不对第三方服务商的数据处理行为负责。此外，支付由 PayPal 处理，PayPal 按其隐私政策处理你的支付信息；我们不接触你的银行卡号等支付凭证。</p>
+
+<h2 id="rights">6. 你的权利</h2>
+<p>在适用法律法规允许范围内，你可以：</p>
+<ul>
+  <li><strong>访问与导出：</strong>随时通过产品内置功能导出你的记忆与笔记；</li>
+  <li><strong>删除：</strong>通过产品内置功能删除单条记忆或清理本地数据；删除浏览器站点数据将清除本地存储内容（请谨慎操作并提前备份）；</li>
+  <li><strong>更正与撤回：</strong>对我们的服务端数据（埋点事件、付款认领信息）如有异议，可联系 <a href="mailto:80306495@qq.com">80306495@qq.com</a> 提出更正、删除或撤回请求；</li>
+  <li><strong>查询与投诉：</strong>可通过 <a href="mailto:80306495@qq.com">80306495@qq.com</a> 查询我们持有的与你相关的服务端数据，或提出投诉。</li>
+</ul>
+<p>我们将在收到请求后于合理期限内处理，并可能要求你提供必要信息以核验身份。</p>
+
+<h2 id="retention">7. 数据保留</h2>
+<ul>
+  <li>本地数据：由你自行管理，我们无法也不代为删除；</li>
+  <li>匿名埋点事件：仅保留汇总统计所需的期限；</li>
+  <li>付款认领状态：为履行付款核对、售后与支持义务保留，并在法律要求或业务必要时按规则处理。</li>
+</ul>
+
+<h2 id="children">8. 儿童隐私</h2>
+<p>本产品面向年满 16 周岁的个人使用。我们不会有意收集 16 周岁以下儿童的个人信息。若你发现此类情况，请联系 <a href="mailto:80306495@qq.com">80306495@qq.com</a>。</p>
+
+<h2 id="updates">9. 政策更新</h2>
+<p>本政策可能随产品更新而修订。我们将在本页面更新"最后更新日期"。重大变更会通过产品内提示等方式通知。继续使用即表示你接受更新后的政策。</p>
+
+<h2 id="contact">10. 联系方式</h2>
+<p>如有任何隐私相关问题或权利请求，请联系：<a href="mailto:80306495@qq.com">80306495@qq.com</a>。</p>
+
+<footer class="doc-footer">
+  <p><a href="#top">返回顶部 ↑</a>　|　<a href="terms.html">服务条款</a>　|　<a href="refund.html">退款与取消政策</a>　|　<a href="faq.html">常见问题</a></p>
+  <p>© 2026 AGI Engine. 隐私优先 · 数据留在你的设备上 · 自带 API Key · PayPal 安全支付</p>
+  <p>联系：<a href="mailto:80306495@qq.com">80306495@qq.com</a></p>
+</footer>
+</div>
+</body>
+</html>

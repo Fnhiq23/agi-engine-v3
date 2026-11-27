@@ -1,0 +1,20 @@
+AGI Engine is a trademark of the project owner. The MIT license grants rights
+to the software code only, not to the name, logos, or official branding.
+Modified or derivative builds must not use "AGI Engine" in a way that implies
+endorsement or official status.
+
+Official channels (the only ones authorized by the owner):
+- Source: GitHub repository Fnhiq23/agi-engine-v3
+- Demo: the GitHub Pages site linked from that repository
+- Support / contact: 80306495@qq.com
+
+Any other domain or distribution claiming to be official is unauthorized.
+
+---
+
+隐私与数据说明（真实实现，非营销话术）：
+- 记忆/笔记默认保存在用户自己的浏览器 localStorage；用户可启用 Privacy Vault，
+  使用 AES-256-GCM + PBKDF2（210,000 次迭代）本地加密，口令由用户自持。
+- LLM 调用由用户自带 API Key，直连用户选择的模型商，不经过本项目服务器。
+- 后端仅记录匿名埋点事件（clientId、事件类型）与付款认领状态，不存储用户记忆内容。
+- 本项目不含区块链、代币或智能合约。

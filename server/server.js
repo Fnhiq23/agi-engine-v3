@@ -65,8 +65,12 @@ const PAYPAL_API = PAYPAL.mode === 'live'
 // ---------- Storage ----------
 function emptyDB() {
   return {
-    version: 1,
+    version: 2,
     createdAt: new Date().toISOString(),
+    referrals: {},       // code -> { code, clientId, payoutEmail, ts, status }
+    attributions: [],    // { ts, code, referrerId, refereeId, event, orderId }
+    commissions: [],     // { ts, code, referrerId, refereeId, orderId, amount, plan, status, mode }
+    payouts: [],         // { ts, code, amount, status, method }
     events: [],          // { ts, type, clientId, channel, data }
     subscriptions: {},   // clientId -> { plan, status, expiresAt, payerId, orderId, ts }
     payments: [],        // verified payments only
@@ -78,7 +82,36 @@ function emptyDB() {
 // Backfill claims array for DBs created before this feature existed.
 function ensureSchema(d) {
   if (!Array.isArray(d.claims)) d.claims = [];
+  if (!Array.isArray(d.events)) d.events = [];
+  if (!d.referrals || typeof d.referrals !== 'object') d.referrals = {};
+  if (!Array.isArray(d.attributions)) d.attributions = [];
+  if (!Array.isArray(d.commissions)) d.commissions = [];
+  if (!Array.isArray(d.payouts)) d.payouts = [];
+  d.version = 2;
   return d;
+}
+
+// Parse v1|clientId|refCode custom_id; backward compatible with plain clientId.
+function parseCustomId(raw) {
+  const s = String(raw || '');
+  if (!s.startsWith('v1|')) return { clientId: s.slice(0, 64), refCode: '' };
+  const parts = s.split('|');
+  return {
+    clientId: String(parts[1] || '').slice(0, 64),
+    refCode: String(parts[2] || '').slice(0, 16).toUpperCase().replace(/[^A-Z0-9-]/g, ''),
+  };
+}
+
+function issueRefCode(clientId) {
+  const id = String(clientId || 'anon').slice(0, 64);
+  for (const code of Object.keys(db.referrals)) {
+    if (db.referrals[code].clientId === id) return db.referrals[code];
+  }
+  const code = 'AGI-' + crypto.randomBytes(3).toString('hex').toUpperCase();
+  const rec = { code, clientId: id, payoutEmail: '', ts: new Date().toISOString(), status: 'ACTIVE' };
+  db.referrals[code] = rec;
+  saveDB();
+  return rec;
 }
 
 function loadDB() {
@@ -217,11 +250,17 @@ async function verifyWebhook(headers, rawBody) {
 }
 
 function planFromResource(resource) {
-  // Map PayPal order/custom_id to plan. custom_id should be set on the payment link.
-  const custom = (resource && (resource.custom_id || (resource.purchase_units && resource.purchase_units[0] && resource.purchase_units[0].custom_id))) || '';
-  const amount = resource && resource.amount && resource.amount.value;
-  if (/annual/i.test(custom) || Number(amount) >= 100) return { plan: 'annual', amount: Number(amount) || 100 };
-  if (/monthly/i.test(custom) || Number(amount) >= 15) return { plan: 'monthly', amount: Number(amount) || 15 };
+  // Map PayPal resource to plan by amount (custom_id now carries clientId|refCode,
+  // so it must NOT be used for plan detection). Amount may live in resource.amount
+  // or in purchase_units[0].amount depending on the event type.
+  let amount = resource && resource.amount && resource.amount.value;
+  if (!amount && resource && resource.purchase_units && resource.purchase_units[0]) {
+    const pu = resource.purchase_units[0];
+    amount = (pu.amount && pu.amount.value) ||
+      (pu.payments && pu.payments.captures && pu.payments.captures[0] && pu.payments.captures[0].amount && pu.payments.captures[0].amount.value);
+  }
+  if (Number(amount) >= 100) return { plan: 'annual', amount: Number(amount) };
+  if (Number(amount) >= 15) return { plan: 'monthly', amount: Number(amount) };
   return { plan: 'unknown', amount: Number(amount) || 0 };
 }
 
@@ -317,8 +356,45 @@ function buildReport() {
     channels: byChannel,
     weekly: week,
     subscriptions: { active: activeSubs.length, total: subs.length },
+    referral: {
+      codes: Object.keys(db.referrals).length,
+      clicks: db.events.filter(e => e.type === 'referral_click').length,
+      signups: db.events.filter(e => e.type === 'referral_signup').length,
+      qualified: db.commissions.length,
+      pending: db.commissions.filter(c => c.status === 'PENDING').length,
+      creditedMonths: db.commissions.filter(c => c.status === 'CREDITED').length,
+    },
+    northStar: {
+      metric: 'WAPS (Weekly Active Paying Subscribers)',
+      value: activeSubs.length,
+      note: 'active subscriptions with verified payment; see revenue.transactions',
+    },
     dataIntegrity: { events: db.events.length, verifiedPayments: db.payments.length, webhookCalls: db.webhookLog.length },
   };
+}
+
+// Record a referral commission (free-months mode by default; cash requires founder opt-in).
+function recordCommission(refCode, refereeId, orderId, amount, plan, mode) {
+  if (!refCode) return;
+  const ref = db.referrals[refCode];
+  if (!ref || ref.status !== 'ACTIVE') return;
+  // Prevent self-referral.
+  if (ref.clientId === refereeId) return;
+  db.attributions.push({
+    ts: new Date().toISOString(), code: refCode,
+    referrerId: ref.clientId, refereeId, event: 'qualified', orderId,
+  });
+  db.commissions.push({
+    ts: new Date().toISOString(), code: refCode,
+    referrerId: ref.clientId, refereeId, orderId,
+    amount: Number(amount) || 0, plan: plan || 'unknown',
+    status: 'PENDING', mode: mode || 'free-months',
+  });
+  db.events.push({
+    ts: new Date().toISOString(), type: 'referral_qualified',
+    clientId: ref.clientId, channel: 'referral',
+    data: { code: refCode, refereeId, orderId },
+  });
 }
 
 // ---------- Router ----------
@@ -333,7 +409,7 @@ const server = http.createServer(async (req, res) => {
 
     if (p === '/api/event' && req.method === 'POST') {
       const b = await readBody(req);
-      const allowed = ['landing_view', 'trial_start', 'onboard_complete', 'first_memory', 'first_chat', 'pro_view', 'pro_click', 'referral'];
+      const allowed = ['landing_view', 'trial_start', 'onboard_complete', 'first_memory', 'first_chat', 'pro_view', 'pro_click', 'referral', 'referral_click', 'referral_signup', 'referral_qualified'];
       if (!allowed.includes(b.type)) return json(res, 400, { error: 'unknown event type' });
       db.events.push({
         ts: new Date().toISOString(),
@@ -384,10 +460,14 @@ const server = http.createServer(async (req, res) => {
         ts: new Date().toISOString(),
         email, plan, txn, clientId,
         channel: String(b.channel || 'direct').slice(0, 32),
+        refCode: String(b.refCode || '').slice(0, 16).toUpperCase().replace(/[^A-Z0-9-]/g, ''),
         status: 'PENDING',
         reviewedAt: null, reviewedBy: null,
       };
       db.claims.push(claim);
+      if (claim.refCode) {
+        db.attributions.push({ ts: claim.ts, code: claim.refCode, referrerId: (db.referrals[claim.refCode] || {}).clientId || '', refereeId: clientId, event: 'claim', orderId: txn });
+      }
       db.events.push({ ts: claim.ts, type: 'pro_click', clientId, channel: claim.channel, data: { plan, claimId: claim.id } });
       prune(); saveDB();
       return json(res, 200, { ok: true, claimId: claim.id, status: 'PENDING', message: 'Submitted. Access activates after verification (usually within 24h).' });
@@ -456,8 +536,40 @@ const server = http.createServer(async (req, res) => {
         channel: c.channel,
         email: c.email,
       });
+      if (c.refCode) recordCommission(c.refCode, c.clientId, c.txn, amount, c.plan, 'free-months');
       saveDB();
       return json(res, 200, { ok: true, status: 'APPROVED', claimId: id, activatedFor: c.clientId, expiresAt: expires.toISOString() });
+    }
+
+    // ---- Referral (affiliate) APIs ----
+    if (p === '/api/referral/me' && req.method === 'GET') {
+      const id = decodeURIComponent(u.searchParams.get('clientId') || '').slice(0, 64);
+      if (!id) return json(res, 400, { error: 'clientId required' });
+      const rec = issueRefCode(id);
+      const mine = db.commissions.filter(c => c.referrerId === id);
+      return json(res, 200, {
+        code: rec.code, payoutEmail: rec.payoutEmail || '',
+        invited: db.attributions.filter(a => a.referrerId === id).length,
+        qualified: mine.filter(c => c.status !== 'REJECTED').length,
+        pending: mine.filter(c => c.status === 'PENDING').length,
+        creditedMonths: mine.filter(c => c.status === 'CREDITED').length,
+        balanceUSD: mine.filter(c => c.status === 'PENDING').reduce((n, c) => n + c.amount * 0.2, 0).toFixed(2),
+        note: 'Cash commission (20%) requires founder confirmation + PayPal Payouts. Free-months mode is active.',
+      });
+    }
+    if (p === '/api/referral/resolve' && req.method === 'GET') {
+      const code = decodeURIComponent(u.searchParams.get('code') || '').slice(0, 16).toUpperCase().replace(/[^A-Z0-9-]/g, '');
+      const rec = db.referrals[code];
+      return json(res, 200, { code, valid: !!(rec && rec.status === 'ACTIVE') });
+    }
+    if (p === '/api/referral/bind-email' && req.method === 'POST') {
+      const b = await readBody(req);
+      const id = String(b.clientId || '').slice(0, 64);
+      const email = String(b.email || '').trim().toLowerCase().slice(0, 120);
+      if (!id || !/^\S+@\S+\.\S+$/.test(email)) return json(res, 400, { error: 'clientId and valid email required' });
+      const rec = issueRefCode(id);
+      rec.payoutEmail = email; saveDB();
+      return json(res, 200, { ok: true, code: rec.code });
     }
 
     // Public config for claim page (payment links + subscription plan ids, no secrets).
@@ -478,11 +590,13 @@ const server = http.createServer(async (req, res) => {
       const planId = plan === 'annual' ? PAYPAL.planAnnual : PAYPAL.planMonthly;
       if (!planId) return json(res, 400, { error: 'PLAN_NOT_CONFIGURED', plan });
       const clientId = String(b.clientId || '').slice(0, 64) || 'anon-' + Date.now();
+      const refCode = String(b.refCode || '').slice(0, 16).toUpperCase().replace(/[^A-Z0-9-]/g, '');
+      const customId = 'v1|' + clientId + '|' + refCode;
       try {
         const token = await getAccessToken();
         const body = {
           plan_id: planId,
-          custom_id: clientId,
+          custom_id: customId,
           subscriber: b.email ? { email_address: String(b.email).slice(0, 120) } : {},
           application_context: {
             brand_name: 'AGI Engine',
@@ -533,7 +647,10 @@ const server = http.createServer(async (req, res) => {
         // agreement is a subscription renewal and is handled separately below.
         const isRenewal = et === 'PAYMENT.SALE.COMPLETED' && (res0.billing_agreement_id || res0.custom_id);
         if ((et === 'CHECKOUT.ORDER.APPROVED' || et === 'PAYMENT.CAPTURE.COMPLETED' || et === 'PAYMENT.SALE.COMPLETED') && !isRenewal) {
-          const clientId = String(res0.custom_id || (res0.purchase_units && res0.purchase_units[0] && res0.purchase_units[0].custom_id) || '').slice(0, 64);
+          const rawCustom = res0.custom_id || (res0.purchase_units && res0.purchase_units[0] && res0.purchase_units[0].custom_id) || '';
+          const parsed = parseCustomId(rawCustom);
+          const clientId = parsed.clientId;
+          const refCode = parsed.refCode;
           const info = planFromResource(res0);
           const orderId = res0.id || (res0.supplementary_data && res0.supplementary_data.related_ids && res0.supplementary_data.related_ids.order_id) || '';
           const now = new Date();
@@ -561,6 +678,7 @@ const server = http.createServer(async (req, res) => {
             eventType: et,
             channel: res0.channel || 'direct',
           });
+          recordCommission(refCode, clientId, orderId, info.amount, info.plan, 'free-months');
         }
 
         // ---- Subscription lifecycle events (Subscriptions API) ----
@@ -568,7 +686,9 @@ const server = http.createServer(async (req, res) => {
           'BILLING.SUBSCRIPTION.CANCELLED', 'BILLING.SUBSCRIPTION.SUSPENDED', 'BILLING.SUBSCRIPTION.EXPIRED'];
         if (subEvents.includes(et)) {
           const subId = res0.id || '';
-          const clientId = String(res0.custom_id || '').slice(0, 64);
+          const parsedSub = parseCustomId(res0.custom_id);
+          const clientId = parsedSub.clientId;
+          const refCode = parsedSub.refCode;
           const planId = String(res0.plan_id || '');
           let plan = 'unknown';
           if (PAYPAL.planAnnual && planId === PAYPAL.planAnnual) plan = 'annual';
@@ -597,12 +717,14 @@ const server = http.createServer(async (req, res) => {
               }
             }
           }
+          if (shouldActivate && refCode) recordCommission(refCode, clientId, subId, planAmount(plan), plan, 'free-months');
           db.events.push({ ts: new Date().toISOString(), type: 'pro_click', clientId: clientId || 'anon', channel: 'subscription', data: { et, subId, plan } });
         }
 
         // ---- Recurring subscription payments ----
         if (et === 'PAYMENT.SALE.COMPLETED' && (res0.billing_agreement_id || res0.custom_id)) {
-          const clientId = String(res0.custom_id || '').slice(0, 64);
+          const parsedRenew = parseCustomId(res0.custom_id);
+          const clientId = parsedRenew.clientId;
           const amt = Number(res0.amount && res0.amount.value) || 0;
           db.payments.push({
             ts: new Date().toISOString(), amount: amt,
@@ -622,6 +744,14 @@ const server = http.createServer(async (req, res) => {
       '/dashboard': 'dashboard.html',
       '/claim': 'claim.html',
       '/reconcile': 'reconcile.html',
+      '/privacy': 'privacy.html',
+      '/privacy.html': 'privacy.html',
+      '/terms': 'terms.html',
+      '/terms.html': 'terms.html',
+      '/refund': 'refund.html',
+      '/refund.html': 'refund.html',
+      '/faq': 'faq.html',
+      '/faq.html': 'faq.html',
     };
     if (staticPages[p]) {
       const file = path.join(PUBLIC_DIR, staticPages[p]);

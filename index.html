@@ -971,6 +971,12 @@ textarea.input-field { font-family: inherit; }
             <div data-i18n="pw_trust2">↩ Cancel anytime, no lock-in</div>
             <div data-i18n="pw_trust3">🔒 Your data never leaves your device</div>
           </div>
+          <div class="policy-links" style="display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin:-4px 0 14px;font-size:11px;">
+            <a href="privacy.html" target="_blank" rel="noopener" style="color:var(--muted);text-decoration:underline;">Privacy Policy</a>
+            <a href="terms.html" target="_blank" rel="noopener" style="color:var(--muted);text-decoration:underline;">Terms</a>
+            <a href="refund.html" target="_blank" rel="noopener" style="color:var(--muted);text-decoration:underline;">Refund</a>
+            <a href="faq.html" target="_blank" rel="noopener" style="color:var(--muted);text-decoration:underline;">FAQ</a>
+          </div>
 
           <div class="paywall-btns">
             <a id="paypal-annual" href="https://www.paypal.com/ncp/payment/SBJ2ZGWP7ACLQ" target="_blank" class="btn btn-accent" style="text-align:center;text-decoration:none;display:flex;align-items:center;justify-content:center;" data-i18n="pw_annual">Annual · $100 (best value)</a>
@@ -1077,10 +1083,11 @@ function initSubscriptionButtons() {
         ev.preventDefault();
         btn.textContent = 'Creating subscription…';
         try {
+          const refCode = (GAME.referrerCode || localStorage.getItem('agi_ref_by') || '').toString().slice(0,16);
           const r = await fetch(BACKEND_BASE + '/api/subscription/create', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ plan, clientId: GAME.clientId, returnUrl: location.href }),
+            body: JSON.stringify({ plan, clientId: GAME.clientId, refCode, returnUrl: location.href }),
           });
           const d = await r.json();
           if (d.ok && d.approvalUrl) {
@@ -1100,14 +1107,28 @@ function initSubscriptionButtons() {
 }
 document.addEventListener('DOMContentLoaded', initSubscriptionButtons);
 
+// Load server-side referral stats into the Earn tab (best-effort).
+function loadReferralStats(d) {
+  if (!d) return;
+  const el = document.getElementById('referralStats');
+  if (el && typeof d !== 'undefined') {
+    const parts = [];
+    if (d.invited !== undefined) parts.push('Invited: ' + d.invited);
+    if (d.qualified !== undefined) parts.push('Qualified: ' + d.qualified);
+    if (d.creditedMonths !== undefined) parts.push('Months earned: ' + d.creditedMonths);
+    el.textContent = parts.join(' · ');
+  }
+}
+
 // Fire a funnel event to the backend (non-blocking, best-effort).
 function track(type, channel) {
   if (!BACKEND_BASE) return; // no backend configured → skip silently
   try {
+    const refCode = (GAME.referrerCode || localStorage.getItem('agi_ref_by') || '').toString().slice(0,16);
     fetch(BACKEND_BASE + '/api/event', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ type, clientId: GAME.clientId || 'anon', channel: channel || 'direct', data: {} }),
+      body: JSON.stringify({ type, clientId: GAME.clientId || 'anon', channel: channel || 'direct', data: refCode ? { refCode } : {} }),
       keepalive: true,
     }).catch(() => {});
   } catch (e) {}
@@ -1300,6 +1321,7 @@ function loadGame() {
 
   // Generate referral code
   if (!GAME.referralCode) {
+    // Offline fallback; online users get a server-issued code via /api/referral/me
     GAME.referralCode = 'AGI-' + Math.random().toString(36).substr(2, 6).toUpperCase();
   }
 
@@ -1947,7 +1969,27 @@ function showApp() {
   const urlParams = new URLSearchParams(window.location.search);
   const ref = urlParams.get('ref');
   if (ref && ref !== GAME.referralCode) {
-    log('info', `Referred by: ${ref}`);
+    const cleanRef = String(ref).slice(0,16).toUpperCase().replace(/[^A-Z0-9-]/g,'');
+    GAME.referrerCode = cleanRef;
+    // 30-day attribution window
+    const stored = JSON.parse(localStorage.getItem('agi_ref_by') || '{}');
+    if (stored.code !== cleanRef || Date.now() - (stored.ts || 0) > 30*86400000) {
+      localStorage.setItem('agi_ref_by', JSON.stringify({ code: cleanRef, ts: Date.now() }));
+      log('info', `Referred by: ${cleanRef}`);
+      track('referral_click', 'referral');
+    }
+  }
+  // Resolve/issue server-side referral code (best-effort, async)
+  if (BACKEND_BASE && GAME.clientId) {
+    fetch(BACKEND_BASE + '/api/referral/me?clientId=' + encodeURIComponent(GAME.clientId))
+      .then(r => r.json()).then(d => {
+        if (d && d.code) {
+          GAME.referralCode = d.code;
+          const codeEl = document.getElementById('referralCode');
+          if (codeEl) codeEl.textContent = d.code;
+          loadReferralStats(d);
+        }
+      }).catch(() => {});
   }
 }
 

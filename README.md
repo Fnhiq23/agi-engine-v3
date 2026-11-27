@@ -3,6 +3,20 @@
 > 这是 `Fnhiq23/agi-engine` 的优化分叉版本。
 > 本分支的目标是：**去掉虚假宣传、修复致命 Bug、加入真实可用的加密功能**。
 
+## 参与 & 信任（新）
+
+| 我想… | 去看 |
+|---|---|
+| 贡献代码 / 翻译 / 安全审计 | [CONTRIBUTING.md](CONTRIBUTING.md) |
+| 推广产品并获得分润 | [AFFILIATE.md](AFFILIATE.md) |
+| 了解我们如何保护你的数据 | [隐私政策](privacy.html) · [服务条款](terms.html) · [退款政策](refund.html) · [FAQ](faq.html) |
+| 了解开源边界（哪些公开 / 哪些永不公开） | [NOTICE](NOTICE) · [DEL-007 分层开源战略](deliverables/DEL-007-分层开源战略.md) |
+| 看真实变现能力与 KPI | [DEL-010 变现审计](deliverables/DEL-010-真实变现能力审计与KPI.md) |
+
+**许可**：代码 MIT（见 [LICENSE](LICENSE)），名称与官方渠道见 [NOTICE](NOTICE)。
+**联系**：80306495@qq.com · 官方仓库 `Fnhiq23/agi-engine-v3`。
+**诚实声明**：本项目不含区块链/代币/智能合约；用户记忆默认只存在自己的浏览器本地。
+
 ---
 
 ## 这个分支做了什么
