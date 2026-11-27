@@ -962,6 +962,42 @@ function wireClaimLink() {
 }
 document.addEventListener('DOMContentLoaded', wireClaimLink);
 
+// If the backend has live subscriptions configured, upgrade the paywall buttons
+// to create real auto-renewing subscriptions. Otherwise keep one-time links.
+function initSubscriptionButtons() {
+  if (!BACKEND_BASE) return; // no backend → keep static one-time links
+  fetch(BACKEND_BASE + '/api/payment-links').then(r => r.json()).then(cfg => {
+    if (!cfg.subscriptionsEnabled) return; // plans not configured → keep one-time links
+    [['paypal-annual','annual'], ['paypal-monthly','monthly']].forEach(([id, plan]) => {
+      const btn = document.getElementById(id);
+      if (!btn) return;
+      btn.addEventListener('click', async (ev) => {
+        ev.preventDefault();
+        btn.textContent = 'Creating subscription…';
+        try {
+          const r = await fetch(BACKEND_BASE + '/api/subscription/create', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ plan, clientId: GAME.clientId, returnUrl: location.href }),
+          });
+          const d = await r.json();
+          if (d.ok && d.approvalUrl) {
+            window.location.href = d.approvalUrl; // redirect to PayPal to approve
+          } else {
+            btn.textContent = plan === 'annual' ? 'Annual $100' : 'Monthly $15';
+            alert('Could not start subscription: ' + (d.error || 'unknown') + '. Please try the one-time payment link.');
+          }
+        } catch (e) {
+          btn.textContent = plan === 'annual' ? 'Annual $100' : 'Monthly $15';
+          alert('Network error. Please try again.');
+        }
+      });
+      btn.title = 'Auto-renewing subscription (cancel anytime)';
+    });
+  }).catch(() => {});
+}
+document.addEventListener('DOMContentLoaded', initSubscriptionButtons);
+
 // Fire a funnel event to the backend (non-blocking, best-effort).
 function track(type, channel) {
   if (!BACKEND_BASE) return; // no backend configured → skip silently
