@@ -5,6 +5,7 @@ server/data/*.json
 server/data/*.tmp
 # Secrets — NEVER commit
 server/.env
+server/.mail.env
 *.pem
 # Logs
 *.log
