@@ -21,8 +21,9 @@
 | DEL-014 | DEL-014-全球免费流量作战地图.md | — | 468 | 全球免费流量作战官 | 已交付 |
 | DEL-015 | DEL-015-官网KPI与数据体系.md | — | 580 | 官网KPI数据官 | 已交付·埋点落地 |
 | DEL-016 | DEL-016-第三轮官网落地总纲.md | — | — | 创始人 | 已签发 |
+| DEL-017 | DEL-017-第一性原理感知管道修复总纲.md | — | — | 创始人 | 已签发·代码落地 |
 
-**合计**：14 位专员 + 3 份创始人总纲/总结，16 份产物。
+**合计**：14 位专员 + 4 份创始人总纲/总结，17 份产物。
 
 ## 编码规则
 - `DEL-NNN`：Deliverable（交付物）三位序号。
@@ -41,6 +42,7 @@
 - DEL-013 → 根 `index.html` 官网（Hero 损失厌恶、数据流向图、定价锚定、风险逆转、FAQ、双语）
 - DEL-014 → 免费流量作战弹药（供创始人本人发布）
 - DEL-015 → 官网埋点（surface=site）、`/api/event` 扩展、`/api/report` 的 site 段、dashboard KPI 卡片；修复 `agi_ref_by` bug
+- DEL-017 → `app.html`（BACKEND_BASE 注入 + Analytics 桥接 + 漏斗触发点）、`index.html`（#heroCta 修复 + 主 CTA 归类 + 转化文案/锚定统一）、`server/server.js`（WAPS 7 日口径 + 白名单补齐）、`dashboard.html`（官网漏斗卡片）、`daily_report_email.py`（WAPS/官网漏斗/推荐段 + 货币符号）
 
 ## 第三轮入口结构
 - 根 `index.html` = 官网（营销首页，转化容器）
@@ -56,3 +58,4 @@
 - 首次建档：2026-11-27
 - 第二轮（开源+分润+KPI）：2026-11-27
 - 关联仓库：Fnhiq23/agi-engine-v3
+- 第四轮（感知管道修复）：2026-11-27 — DEL-017，修复 App 端"感知失灵"，WAPS 改真实周口径，定价锚定统一
