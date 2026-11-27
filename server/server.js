@@ -469,6 +469,44 @@ const server = http.createServer(async (req, res) => {
       });
     }
 
+    // Create a real PayPal subscription (auto-renew). Returns approval URL.
+    // custom_id carries the client so the webhook can activate the right user.
+    if (p === '/api/subscription/create' && req.method === 'POST') {
+      if (!PAYPAL.clientId || !PAYPAL.secret) return json(res, 503, { error: 'PAYMENTS_NOT_CONFIGURED' });
+      const b = await readBody(req);
+      const plan = b.plan === 'annual' ? 'annual' : 'monthly';
+      const planId = plan === 'annual' ? PAYPAL.planAnnual : PAYPAL.planMonthly;
+      if (!planId) return json(res, 400, { error: 'PLAN_NOT_CONFIGURED', plan });
+      const clientId = String(b.clientId || '').slice(0, 64) || 'anon-' + Date.now();
+      try {
+        const token = await getAccessToken();
+        const body = {
+          plan_id: planId,
+          custom_id: clientId,
+          subscriber: b.email ? { email_address: String(b.email).slice(0, 120) } : {},
+          application_context: {
+            brand_name: 'AGI Engine',
+            user_action: 'SUBSCRIBE_NOW',
+            payment_method: { payer_selected: 'PAYPAL', payee_preferred: 'IMMEDIATE_PAYMENT_REQUIRED' },
+            return_url: (b.returnUrl || '') + '?sub=success&cid=' + encodeURIComponent(clientId),
+            cancel_url: (b.returnUrl || '') + '?sub=cancel',
+          },
+        };
+        const r = await httpsRequest(`${PAYPAL_API}/v1/billing/subscriptions`, {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json', 'PayPal-Request-Id': 'sub-' + Date.now() + '-' + Math.random().toString(36).slice(2, 8) },
+        }, JSON.stringify(body));
+        if (r.status >= 300) return json(res, 502, { error: 'PAYPAL_CREATE_FAILED', status: r.status, detail: r.body.slice(0, 300) });
+        const sub = JSON.parse(r.body);
+        const approve = (sub.links || []).find(l => l.rel === 'approve');
+        db.events.push({ ts: new Date().toISOString(), type: 'pro_click', clientId, channel: 'subscription-create', data: { plan, subId: sub.id } });
+        saveDB();
+        return json(res, 200, { ok: true, subscriptionId: sub.id, approvalUrl: approve ? approve.href : null, plan, clientId });
+      } catch (e) {
+        return json(res, 500, { error: 'CREATE_ERROR', message: e.message });
+      }
+    }
+
     if (p === '/api/paypal/webhook' && req.method === 'POST') {
       const raw = await readRawBody(req);
       let result;
