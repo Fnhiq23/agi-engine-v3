@@ -3,6 +3,22 @@
 > 本文记录 PayPal 生产凭据配置结果、已创建的订阅基础设施、验证结果。
 > **注意**：Secret 等敏感值只存在于 `server/.env`（已被 gitignore），本文不含任何密钥。
 
+## ⚠️ 最新状态更新（2026-11-27 21:55）
+
+一次全链路复查发现：**PayPal 生产凭据已被 PayPal 端拒绝（401 invalid_client）**。
+- 现象：`/api/subscription/create` 返回 500 `PayPal token error: 401`；
+  本地直接用 `.env` 的 clientId+secret 请求 `api-m.paypal.com/v1/oauth2/token` 也返回 401。
+- 判断：Secret 在聊天中传递过，很可能被 PayPal 自动轮换/吊销，或已被手动轮换。
+  `.env` 中写入无误（无空白、长度正常），故为凭据本身失效，非代码问题。
+- 影响：**自动续费订阅链路暂停**，但三个收款入口仍全部有效（实测 HTTP 200）：
+  - $100 年付 / $15 月付 NCP 链接
+  - `paypal.me/fnhiq23`
+- 修复：去 PayPal Developer Dashboard 重新生成 Secret，然后运行
+  `python3 server/fix_paypal.py` 按提示输入新 Secret（脚本会验证真伪并写回 `.env`），
+  再由 AI 重新发布后端使线上生效。Client ID 若也轮换，用
+  `PAYPAL_CLIENT_ID=新ID python3 server/fix_paypal.py` 覆盖。
+- GitHub 代码已同步：commit `32202b7`（含 PayPal.Me + 生产订阅基础设施）。
+
 ## 一、PayPal 生产凭据（已配置并验证）
 
 | 配置项 | 状态 | 验证方式 |
