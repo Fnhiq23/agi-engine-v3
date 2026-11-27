@@ -1,0 +1,14 @@
+{
+  "name": "agi-engine-backend",
+  "version": "3.0.0",
+  "private": true,
+  "description": "AGI Engine — local-first private AI assistant with real payment verification",
+  "main": "server/server.js",
+  "scripts": {
+    "start": "node server/server.js",
+    "dev": "node server/server.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

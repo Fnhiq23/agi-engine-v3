@@ -52,6 +52,8 @@ const PAYPAL = {
   mode: (process.env.PAYPAL_MODE || 'sandbox').toLowerCase(),
   annualLink: process.env.PAYPAL_ANNUAL_LINK || 'https://www.paypal.com/ncp/payment/SBJ2ZGWP7ACLQ',
   monthlyLink: process.env.PAYPAL_MONTHLY_LINK || 'https://www.paypal.com/ncp/payment/6SAYLMHK2ZHNE',
+  planMonthly: process.env.PAYPAL_PLAN_MONTHLY || '',
+  planAnnual: process.env.PAYPAL_PLAN_ANNUAL || '',
 };
 // Admin token protects manual claim reconciliation endpoints.
 const ADMIN_TOKEN = process.env.ADMIN_TOKEN || '';
@@ -457,9 +459,13 @@ const server = http.createServer(async (req, res) => {
       return json(res, 200, { ok: true, status: 'APPROVED', claimId: id, activatedFor: c.clientId, expiresAt: expires.toISOString() });
     }
 
-    // Public config for claim page (payment links, no secrets).
+    // Public config for claim page (payment links + subscription plan ids, no secrets).
     if (p === '/api/payment-links') {
-      return json(res, 200, { annual: PAYPAL.annualLink, monthly: PAYPAL.monthlyLink, mode: PAYPAL.mode });
+      return json(res, 200, {
+        annual: PAYPAL.annualLink, monthly: PAYPAL.monthlyLink, mode: PAYPAL.mode,
+        planAnnual: PAYPAL.planAnnual, planMonthly: PAYPAL.planMonthly,
+        subscriptionsEnabled: !!(PAYPAL.planAnnual && PAYPAL.planMonthly && PAYPAL.clientId),
+      });
     }
 
     if (p === '/api/paypal/webhook' && req.method === 'POST') {
@@ -484,7 +490,10 @@ const server = http.createServer(async (req, res) => {
       if (result.verified && event) {
         const et = event.event_type;
         const res0 = event.resource || {};
-        if (et === 'CHECKOUT.ORDER.APPROVED' || et === 'PAYMENT.CAPTURE.COMPLETED' || et === 'PAYMENT.SALE.COMPLETED') {
+        // One-time payment events only. PAYMENT.SALE.COMPLETED with a billing
+        // agreement is a subscription renewal and is handled separately below.
+        const isRenewal = et === 'PAYMENT.SALE.COMPLETED' && (res0.billing_agreement_id || res0.custom_id);
+        if ((et === 'CHECKOUT.ORDER.APPROVED' || et === 'PAYMENT.CAPTURE.COMPLETED' || et === 'PAYMENT.SALE.COMPLETED') && !isRenewal) {
           const clientId = String(res0.custom_id || (res0.purchase_units && res0.purchase_units[0] && res0.purchase_units[0].custom_id) || '').slice(0, 64);
           const info = planFromResource(res0);
           const orderId = res0.id || (res0.supplementary_data && res0.supplementary_data.related_ids && res0.supplementary_data.related_ids.order_id) || '';
@@ -512,6 +521,55 @@ const server = http.createServer(async (req, res) => {
             clientId,
             eventType: et,
             channel: res0.channel || 'direct',
+          });
+        }
+
+        // ---- Subscription lifecycle events (Subscriptions API) ----
+        const subEvents = ['BILLING.SUBSCRIPTION.ACTIVATED', 'BILLING.SUBSCRIPTION.CREATED',
+          'BILLING.SUBSCRIPTION.CANCELLED', 'BILLING.SUBSCRIPTION.SUSPENDED', 'BILLING.SUBSCRIPTION.EXPIRED'];
+        if (subEvents.includes(et)) {
+          const subId = res0.id || '';
+          const clientId = String(res0.custom_id || '').slice(0, 64);
+          const planId = String(res0.plan_id || '');
+          let plan = 'unknown';
+          if (PAYPAL.planAnnual && planId === PAYPAL.planAnnual) plan = 'annual';
+          else if (PAYPAL.planMonthly && planId === PAYPAL.planMonthly) plan = 'monthly';
+          else if (/annual/i.test(planId)) plan = 'annual';
+          else if (/monthly/i.test(planId)) plan = 'monthly';
+          const shouldActivate = (et === 'BILLING.SUBSCRIPTION.ACTIVATED' || et === 'BILLING.SUBSCRIPTION.CREATED');
+          if (clientId) {
+            if (shouldActivate) {
+              const now = new Date();
+              const expires = new Date(now);
+              if (plan === 'annual') expires.setFullYear(expires.getFullYear() + 1);
+              else if (plan === 'monthly') expires.setMonth(expires.getMonth() + 1);
+              else expires.setDate(expires.getDate() + 30);
+              db.subscriptions[clientId] = {
+                plan, status: 'ACTIVE', expiresAt: expires.toISOString(),
+                payerId: (res0.subscriber && res0.subscriber.email_address) || '',
+                orderId: subId, ts: now.toISOString(), source: 'paypal-subscription',
+              };
+            } else {
+              // Cancelled/suspended/expired → revoke access.
+              if (db.subscriptions[clientId]) {
+                db.subscriptions[clientId].status = 'CANCELLED';
+                db.subscriptions[clientId].cancelledAt = new Date().toISOString();
+                db.subscriptions[clientId].cancelEvent = et;
+              }
+            }
+          }
+          db.events.push({ ts: new Date().toISOString(), type: 'pro_click', clientId: clientId || 'anon', channel: 'subscription', data: { et, subId, plan } });
+        }
+
+        // ---- Recurring subscription payments ----
+        if (et === 'PAYMENT.SALE.COMPLETED' && (res0.billing_agreement_id || res0.custom_id)) {
+          const clientId = String(res0.custom_id || '').slice(0, 64);
+          const amt = Number(res0.amount && res0.amount.value) || 0;
+          db.payments.push({
+            ts: new Date().toISOString(), amount: amt,
+            plan: amt >= 100 ? 'annual' : 'monthly',
+            orderId: res0.id || res0.billing_agreement_id || '', clientId,
+            eventType: 'SUBSCRIPTION_RENEWAL', channel: 'subscription',
           });
         }
       }

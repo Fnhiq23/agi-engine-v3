@@ -1,0 +1,30 @@
+# Render 声明式部署配置 (Blueprint)
+# 用法: Render Dashboard -> New -> Blueprint -> 连接 GitHub 仓库 -> 自动读取本文件
+# 免费层 Web Service 会在 15 分钟无活动后休眠，配合 UptimeRobot 每 10 分钟 ping 保持唤醒。
+
+services:
+  - type: web
+    name: agi-engine-backend
+    runtime: node
+    plan: free
+    region: singapore
+    buildCommand: "echo 'zero-dependency backend, no build needed'"
+    startCommand: "node server/server.js"
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: PAYPAL_MODE
+        value: sandbox
+      - key: ADMIN_TOKEN
+        generateValue: true      # Render 自动生成强随机令牌，无需手填
+      - key: PAYPAL_ANNUAL_LINK
+        value: https://www.paypal.com/ncp/payment/SBJ2ZGWP7ACLQ
+      - key: PAYPAL_MONTHLY_LINK
+        value: https://www.paypal.com/ncp/payment/6SAYLMHK2ZHNE
+      # 以下敏感值请在 Render Dashboard -> Environment 手动填写（不要写进本文件）:
+      # PAYPAL_CLIENT_ID
+      # PAYPAL_SECRET
+      # PAYPAL_WEBHOOK_ID
+      # PAYPAL_PLAN_MONTHLY
+      # PAYPAL_PLAN_ANNUAL
