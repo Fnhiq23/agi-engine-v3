@@ -3,21 +3,28 @@
 > 本文记录 PayPal 生产凭据配置结果、已创建的订阅基础设施、验证结果。
 > **注意**：Secret 等敏感值只存在于 `server/.env`（已被 gitignore），本文不含任何密钥。
 
-## ⚠️ 最新状态更新（2026-11-27 21:55）
+## ✅ 故障已修复（2026-11-27 22:07）
 
-一次全链路复查发现：**PayPal 生产凭据已被 PayPal 端拒绝（401 invalid_client）**。
-- 现象：`/api/subscription/create` 返回 500 `PayPal token error: 401`；
-  本地直接用 `.env` 的 clientId+secret 请求 `api-m.paypal.com/v1/oauth2/token` 也返回 401。
-- 判断：Secret 在聊天中传递过，很可能被 PayPal 自动轮换/吊销，或已被手动轮换。
-  `.env` 中写入无误（无空白、长度正常），故为凭据本身失效，非代码问题。
-- 影响：**自动续费订阅链路暂停**，但三个收款入口仍全部有效（实测 HTTP 200）：
-  - $100 年付 / $15 月付 NCP 链接
-  - `paypal.me/fnhiq23`
-- 修复：去 PayPal Developer Dashboard 重新生成 Secret，然后运行
-  `python3 server/fix_paypal.py` 按提示输入新 Secret（脚本会验证真伪并写回 `.env`），
-  再由 AI 重新发布后端使线上生效。Client ID 若也轮换，用
-  `PAYPAL_CLIENT_ID=新ID python3 server/fix_paypal.py` 覆盖。
-- GitHub 代码已同步：commit `32202b7`（含 PayPal.Me + 生产订阅基础设施）。
+**问题**：21:55 复查发现 PayPal 生产 Secret 被 PayPal 端拒绝（401 invalid_client），
+自动续费订阅链路一度暂停。原因是旧 Secret 在聊天中传递过，被轮换/吊销。
+
+**修复过程**（已完成）：
+1. 用户提供新 Secret → 用 `api-m.paypal.com/v1/oauth2/token` 验证真伪 → PASS（拿到 live token）
+2. 写回 `server/.env` 的 `PAYPAL_SECRET`（Client ID 未变）
+3. 重启本地服务实测订阅创建 → 成功创建订阅并拿到批准链接
+4. 重新发布后端（链接不变）使线上生效
+5. 线上复测 `POST /api/subscription/create` → 成功创建真实订阅 `I-4YK1TGSXPPCP`
+   （未批准，不扣款；未批准的订阅 PayPal 会自动过期）
+6. 线上健康 `mode=live`，报表数据干净（revenue 0 / subscriptions 0）
+
+**当前状态**：自动续费订阅链路已恢复 ✅；三个收款入口全部有效（$100 年付、$15 月付、
+`paypal.me/fnhiq23`，均 HTTP 200）。
+
+**安全提醒**：新 Secret 同样通过聊天传递，请当作已暴露处理。稳定运营后建议：
+在 PayPal Dashboard 再次轮换，改用 `python3 server/fix_paypal.py` 以非聊天方式更新，
+或迁移到 Render 后用平台环境变量注入，彻底避免密钥进聊天记录。
+
+- GitHub 代码已同步：最新 commit `7b97c5c7`（含 PayPal.Me、生产订阅基础设施、修复脚本、状态文档）。
 
 ## 一、PayPal 生产凭据（已配置并验证）
 
